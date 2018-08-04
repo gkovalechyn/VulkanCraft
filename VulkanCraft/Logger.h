@@ -5,6 +5,9 @@
 #include <ctime>
 #include <array>
 #include <iostream>
+#include <cstdarg>
+#include <vector>
+
 #include "Util.h"
 
 namespace VulkanCraft {
@@ -22,7 +25,8 @@ namespace VulkanCraft {
 		class Logger {
 		public:
 			~Logger();
-
+			
+			static void vaLog(const LogLevel& level, const char* format, ...);
 			static void log(const LogLevel& level, const std::string& message);
 			static void debug(const std::string& message);
 			static void info(const std::string& message);

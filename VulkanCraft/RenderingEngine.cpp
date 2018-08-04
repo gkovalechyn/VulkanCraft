@@ -50,16 +50,13 @@ void RenderingEngine::initializeVulkan() {
 
 	vk::InstanceCreateInfo createInfo;
 	createInfo.setPApplicationInfo(&applicationInfo)
-		.setEnabledExtensionCount(extensions.size())
+		.setEnabledExtensionCount((uint32_t) extensions.size())
 		.setPpEnabledExtensionNames(extensions.data());
 
 #ifdef DEBUG
-	std::vector<const char*> requiredLayers = { "VK_LAYER_LUNARG_standard_validation" };
-	createInfo.setEnabledLayerCount(requiredLayers.size())
+	createInfo.setEnabledLayerCount((uint32_t) requiredLayers.size())
 		.setPpEnabledLayerNames(requiredLayers.data());
-#else
-	std::vector<const char*> requiredLayers = {};
-#endif// DEBUG
+#endif
 
 	this->vkInstance = vk::createInstance(createInfo, nullptr);
 
@@ -80,12 +77,22 @@ void RenderingEngine::initializeVulkan() {
 	Core::Logger::debug("Created debug report callback");
 #endif
 
-	this->device = GraphicalDevice::getGraphicalDevice(this->vkInstance, requiredLayers);
+	this->initializeGraphicalDevice();
+}
+
+void VulkanCraft::Graphics::RenderingEngine::initializeGraphicalDevice() {
+	VkSurfaceKHR surface;
+	glfwCreateWindowSurface(this->vkInstance, this->window, nullptr, &surface);
+	this->surface = surface;
+
+	std::vector<const char*> requiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
+	this->device = GraphicalDevice::getGraphicalDevice(this->vkInstance, requiredLayers, requiredExtensions, this->surface);
 }
 
 void RenderingEngine::terminate() {
 	this->device->destroy();
-
+	this->vkInstance.destroySurfaceKHR(this->surface);
 #ifdef DEBUG
 	auto func = (PFN_vkDestroyDebugReportCallbackEXT)this->vkInstance.getProcAddr("vkDestroyDebugReportCallbackEXT");
 	if (func != nullptr) {

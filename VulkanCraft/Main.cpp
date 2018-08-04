@@ -1,10 +1,10 @@
 #include <iostream>
-#include <GLFW/glfw3.h>
 #include "Logger.h"
 #include "RenderingEngine.h"
 
 int main(int argc, char* argv[]) {
 	VulkanCraft::Core::Logger::createInstance();
+	int logargc = 0;
 
 	glfwInit();
 

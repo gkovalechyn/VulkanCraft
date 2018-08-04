@@ -42,6 +42,9 @@
     <ClCompile Include="GraphicalDevice.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Swapchain.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -57,6 +60,9 @@
       <Filter>Header Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="GraphicalDevice.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Swapchain.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>

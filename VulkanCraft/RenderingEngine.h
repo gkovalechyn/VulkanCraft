@@ -1,4 +1,5 @@
 #pragma once
+#define GLFW_INCLUDE_VULKAN
 #include <string>
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
@@ -16,6 +17,7 @@ namespace VulkanCraft {
 
 			void initialize(GLFWwindow* window);
 			void initializeVulkan();
+			void initializeGraphicalDevice();
 
 			void terminate();
 		private:
@@ -23,7 +25,15 @@ namespace VulkanCraft {
 			vk::Instance vkInstance;
 			VkDebugReportCallbackEXT debugCallbackHandle;
 			GraphicalDevice* device;
+			vk::SurfaceKHR surface;
 
+#ifdef DEBUG
+			std::vector<const char*> requiredLayers = { "VK_LAYER_LUNARG_standard_validation" };
+#else
+			std::vector<const char*> requiredLayers = {};
+#endif// DEBUG
+
+			
 		};
 	}
 }

@@ -18,7 +18,22 @@ Logger::~Logger() {
 	this->fileOut->close();
 }
 
-void Logger::log(const LogLevel& level, const std::string& message) {
+void VulkanCraft::Core::Logger::vaLog(const LogLevel & level, const char* format, ...) {
+	std::vector<char> buffer(strlen(format) * 2);
+
+	std::va_list args;
+	va_start(args, format);
+	int ret = vsnprintf(buffer.data(), buffer.capacity(), format, args);
+	va_end(args);
+
+	if (ret > 0 && ret < buffer.capacity()) {//The write is only successful if the value returned is in this range
+		Logger::log(level, std::string(buffer.data(), ret));
+	} else {
+		Logger::error("Failed to write log line, either buffer too small or not enough arguments");
+	}
+}
+
+void VulkanCraft::Core::Logger::log(const LogLevel & level, const std::string& message) {
 	if (level < Logger::instance->minLevel) {
 		return;
 	}
@@ -28,24 +43,24 @@ void Logger::log(const LogLevel& level, const std::string& message) {
 	std::string logLevelString;
 
 	switch (level) {
-		case LogLevel::eDebug:
-			logLevelString = "DEBUG";
-			break;
-		case LogLevel::eInfo:
-			logLevelString = "INFO";
-			break;
-		case LogLevel::eWarning:
-			logLevelString = "WARNING";
-			break;
-		case LogLevel::eDanger:
-			logLevelString = "DANGER";
-			break;
-		case LogLevel::eError:
-			logLevelString = "ERROR";
-			break;
-		default:
-			logLevelString = "ERROR_LOG_LEVEL";
-			break;
+	case LogLevel::eDebug:
+		logLevelString = "DEBUG";
+		break;
+	case LogLevel::eInfo:
+		logLevelString = "INFO";
+		break;
+	case LogLevel::eWarning:
+		logLevelString = "WARNING";
+		break;
+	case LogLevel::eDanger:
+		logLevelString = "DANGER";
+		break;
+	case LogLevel::eError:
+		logLevelString = "ERROR";
+		break;
+	default:
+		logLevelString = "ERROR_LOG_LEVEL";
+		break;
 	}
 
 	Logger::instance->mutex.lock();//Lock
