@@ -88,11 +88,14 @@ void VulkanCraft::Graphics::RenderingEngine::initializeGraphicalDevice() {
 	std::vector<const char*> requiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 	this->device = GraphicalDevice::getGraphicalDevice(this->vkInstance, requiredLayers, requiredExtensions, this->surface);
+
+	this->swapchain = new Swapchain(*this->device, this->surface);
 }
 
 void RenderingEngine::terminate() {
-	this->device->destroy();
+	this->swapchain->cleanup(*this->device);
 	this->vkInstance.destroySurfaceKHR(this->surface);
+
 #ifdef DEBUG
 	auto func = (PFN_vkDestroyDebugReportCallbackEXT)this->vkInstance.getProcAddr("vkDestroyDebugReportCallbackEXT");
 	if (func != nullptr) {
@@ -100,5 +103,6 @@ void RenderingEngine::terminate() {
 	}
 #endif // DEBUG
 
+	this->device->destroy();
 	this->vkInstance.destroy();
 }

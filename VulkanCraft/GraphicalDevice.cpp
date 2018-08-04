@@ -58,10 +58,6 @@ GraphicalDevice* GraphicalDevice::getGraphicalDevice(
 		|| device->presentFamilyIndex < 0) {
 		Core::Logger::error("Could not find all family indexes");
 	}
-	//Swapchain stuff
-	device->swapchainDetails.surfaceFormat = GraphicalDevice::getBestFormat(device->physicalDevice.getSurfaceFormatsKHR(surface));
-	device->swapchainDetails.presentMode = GraphicalDevice::getBestPresentMode(device->physicalDevice.getSurfacePresentModesKHR(surface));
-	device->swapchainDetails.extent = GraphicalDevice::chooseSwapExtent(device->physicalDevice.getSurfaceCapabilitiesKHR(surface));
 
 	std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos(3);
 	float queuePriorities = 1.0f;
@@ -142,43 +138,4 @@ bool VulkanCraft::Graphics::GraphicalDevice::isDeviceSuitable(vk::PhysicalDevice
 	return true;
 }
 
-vk::SurfaceFormatKHR VulkanCraft::Graphics::GraphicalDevice::getBestFormat(std::vector<vk::SurfaceFormatKHR> availableFormats) {
-	if (availableFormats.size() == 1 && availableFormats[0].format == vk::Format::eUndefined) {
-		return { vk::Format::eB8G8R8A8Unorm, vk::ColorSpaceKHR::eSrgbNonlinear };
-	}
 
-	for (const auto& availableFormat : availableFormats) {
-		if (availableFormat.format == vk::Format::eB8G8R8A8Unorm && availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
-			return availableFormat;
-		}
-	}
-
-	return availableFormats[0];
-}
-
-vk::PresentModeKHR VulkanCraft::Graphics::GraphicalDevice::getBestPresentMode(std::vector<vk::PresentModeKHR> availablePresentModes) {
-	vk::PresentModeKHR bestMode = vk::PresentModeKHR::eFifo;
-
-	for (const auto& availablePresentMode : availablePresentModes) {
-		if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
-			return availablePresentMode;
-		} else if (availablePresentMode == vk::PresentModeKHR::eImmediate) {
-			bestMode = availablePresentMode;
-		}
-	}
-
-	return bestMode;
-}
-
-vk::Extent2D VulkanCraft::Graphics::GraphicalDevice::chooseSwapExtent(vk::SurfaceCapabilitiesKHR capabilities) {
-	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-		return capabilities.currentExtent;
-	} else {
-		VkExtent2D actualExtent = capabilities.currentExtent;
-
-		actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
-		actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
-
-		return actualExtent;
-	}
-}

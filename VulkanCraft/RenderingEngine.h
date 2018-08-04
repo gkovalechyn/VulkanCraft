@@ -7,6 +7,7 @@
 #include "GlobalDefines.h"
 #include "Logger.h"
 #include "GraphicalDevice.h"
+#include "Swapchain.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -26,7 +27,8 @@ namespace VulkanCraft {
 			VkDebugReportCallbackEXT debugCallbackHandle;
 			GraphicalDevice* device;
 			vk::SurfaceKHR surface;
-
+			Swapchain* swapchain;
+	
 #ifdef DEBUG
 			std::vector<const char*> requiredLayers = { "VK_LAYER_LUNARG_standard_validation" };
 #else
