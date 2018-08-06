@@ -4,7 +4,7 @@
 
 namespace VulkanCraft {
 	namespace Core {
-		inline std::string formatDate(const std::string format, const tm* time) {
+		inline std::string formatDate(const std::string& format, const tm* time) {
 			char buffer[64];
 			memset(buffer, 0, 64);
 			strftime(buffer, sizeof(buffer), format.c_str(), time);

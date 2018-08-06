@@ -120,7 +120,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DefaultPipeline.cpp" />
     <ClCompile Include="GraphicalDevice.cpp" />
+    <ClCompile Include="GraphicsPipeline.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
@@ -128,13 +130,21 @@
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DefaultPipeline.h" />
+    <ClInclude Include="FileUtils.h" />
     <ClInclude Include="GlobalDefines.h" />
     <ClInclude Include="GraphicalDevice.h" />
     <ClInclude Include="GraphicsDefs.h" />
+    <ClInclude Include="GraphicsPipeline.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="RenderingEngine.h" />
     <ClInclude Include="Swapchain.h" />
     <ClInclude Include="Util.h" />
+    <ClInclude Include="Vertex.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="default.frag" />
+    <None Include="default.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
