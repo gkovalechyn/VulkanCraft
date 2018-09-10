@@ -15,6 +15,11 @@ namespace VulkanCraft {
 			void recreate();
 			void cleanup();
 
+			void setVertexShader();
+			void setFragmentShader();
+
+			void build();
+
 		private:
 			GraphicalDevice * device;
 			vk::Pipeline handle;
