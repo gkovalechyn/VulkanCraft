@@ -1,7 +1,7 @@
 #include "Logger.h"
 using namespace VulkanCraft::Core;
 
-Logger* Logger::instance;
+std::unique_ptr<Logger> Logger::instance;
 
 Logger::Logger() {
 	time_t time = std::time(nullptr);
@@ -97,7 +97,7 @@ void Logger::error(const std::string& message) {
 void Logger::createInstance() {
 	//No need to lock this operation since it will be done once before all the other threads are created
 	if (Logger::instance == nullptr) {
-		Logger::instance = new Logger();
+		Logger::instance = std::make_unique<Logger>();
 	}
 }
 

@@ -43,7 +43,7 @@ namespace VulkanCraft {
 		private:
 			Logger();
 
-			static Logger* instance;
+			static std::unique_ptr<Logger> instance;
 
 			bool logToConsole = true;
 			LogLevel minLevel = LogLevel::eDebug;
