@@ -8,6 +8,7 @@
 #include "Logger.h"
 #include "GraphicalDevice.h"
 #include "Swapchain.h"
+#include "GraphicsPipeline.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -16,9 +17,14 @@ namespace VulkanCraft {
 			RenderingEngine();
 			~RenderingEngine();
 
+			RenderingEngine(const RenderingEngine& other) = delete;
+			RenderingEngine(RenderingEngine&& other) = delete;
+
 			void initialize(GLFWwindow* window);
 			void initializeVulkan();
 			void initializeGraphicalDevice();
+
+			void registerPipeline(std::string name, GraphicsPipeline* pipeline);
 
 			void terminate();
 		private:

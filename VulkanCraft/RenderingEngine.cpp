@@ -103,6 +103,5 @@ void RenderingEngine::terminate() {
 	}
 #endif // DEBUG
 
-	this->device->destroy();
 	this->vkInstance.destroy();
 }

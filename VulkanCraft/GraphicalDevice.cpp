@@ -104,6 +104,7 @@ GraphicalDevice::GraphicalDevice() {
 
 
 GraphicalDevice::~GraphicalDevice() {
+
 }
 
 bool VulkanCraft::Graphics::GraphicalDevice::isDeviceSuitable(vk::PhysicalDevice device, std::vector<const char*>& requiredExtensions, vk::SurfaceKHR surface) {
