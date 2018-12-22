@@ -8,7 +8,6 @@
 #include "Logger.h"
 #include "GraphicalDevice.h"
 #include "Swapchain.h"
-#include "DefaultPipeline.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -26,10 +25,10 @@ namespace VulkanCraft {
 			GLFWwindow * window;
 			vk::Instance vkInstance;
 			VkDebugReportCallbackEXT debugCallbackHandle;
-			GraphicalDevice* device;
+			std::unique_ptr<GraphicalDevice> device;
 			vk::SurfaceKHR surface;
-			Swapchain* swapchain;
-			GraphicsPipeline* pipeline;
+			std::unique_ptr<Swapchain> swapchain;
+			//std::unique_ptr<GraphicsPipeline> pipeline;
 
 #ifdef DEBUG
 			std::vector<const char*> requiredLayers = { "VK_LAYER_LUNARG_standard_validation" };

@@ -3,12 +3,12 @@
 using namespace VulkanCraft;
 using namespace VulkanCraft::Graphics;
 
-GraphicalDevice* GraphicalDevice::getGraphicalDevice(
+std::unique_ptr<GraphicalDevice> GraphicalDevice::getGraphicalDevice(
 	vk::Instance& instance,
 	std::vector<const char*>& validationLayers, 
 	std::vector<const char*>& requiredExtensions,
 	vk::SurfaceKHR surface) {
-	GraphicalDevice* device = new GraphicalDevice();
+	auto device = std::make_unique<GraphicalDevice>();
 
 	std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
 

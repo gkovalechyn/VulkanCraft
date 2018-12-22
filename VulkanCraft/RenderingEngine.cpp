@@ -89,7 +89,7 @@ void VulkanCraft::Graphics::RenderingEngine::initializeGraphicalDevice() {
 
 	this->device = GraphicalDevice::getGraphicalDevice(this->vkInstance, requiredLayers, requiredExtensions, this->surface);
 
-	this->swapchain = new Swapchain(*this->device, this->surface);
+	this->swapchain = std::make_unique<Swapchain>(*this->device, this->surface);
 }
 
 void RenderingEngine::terminate() {
