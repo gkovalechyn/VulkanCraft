@@ -13,7 +13,7 @@
 namespace VulkanCraft {
 	namespace Core {
 
-		enum class LogLevel :int32_t {
+		enum class LogLevel : int {
 			eDebug = -1,
 			eInfo = 0,
 			eWarning = 1,
