@@ -33,7 +33,7 @@ void RenderingEngine::initialize(GLFWwindow * window) {
 void RenderingEngine::initializeVulkan() {
 	vk::ApplicationInfo applicationInfo;
 	applicationInfo.setApiVersion(VK_API_VERSION_1_0)
-		.setPApplicationName("Vulkan thing")
+		.setPApplicationName("VulkanCraft")
 		.setApplicationVersion(VK_MAKE_VERSION(0, 0, 1))
 		.setPEngineName("No engine")
 		.setEngineVersion(VK_MAKE_VERSION(0, 0, 1));
