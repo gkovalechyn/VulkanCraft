@@ -1,0 +1,25 @@
+{
+  "description": "Example pipeline",
+
+  "settings": {
+    "cullingMode": ""
+  },
+
+  "shaders": {
+    "vertex": {
+      "name": "default",
+      "path": "Shaders/example.vert.spv",
+
+      "inputs": {},
+      "outputs": {}
+    },
+
+    "fragment": {
+      "name": "default",
+      "path": "Shaders/example.frag.spv",
+
+      "inputs": {},
+      "outputs": {}
+    }
+  }
+}

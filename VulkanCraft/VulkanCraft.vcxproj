@@ -120,7 +120,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DefaultPipeline.cpp" />
+    <ClCompile Include="Configuration.cpp" />
+    <ClCompile Include="DeferredPipeline.cpp" />
     <ClCompile Include="GraphicalDevice.cpp" />
     <ClCompile Include="GraphicsPipeline.cpp" />
     <ClCompile Include="Logger.cpp" />
@@ -132,12 +133,14 @@
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DefaultPipeline.h" />
+    <ClInclude Include="Configuration.h" />
+    <ClInclude Include="DeferredPipeline.h" />
     <ClInclude Include="FileUtils.h" />
     <ClInclude Include="GlobalDefines.h" />
     <ClInclude Include="GraphicalDevice.h" />
     <ClInclude Include="GraphicsDefs.h" />
     <ClInclude Include="GraphicsPipeline.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="RenderingEngine.h" />
     <ClInclude Include="Shader.h" />
