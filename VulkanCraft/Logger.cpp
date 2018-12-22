@@ -12,8 +12,6 @@ Logger::Logger() {
 		throw std::runtime_error("Could not log file for writing.");
 	}
 }
-
-
 Logger::~Logger() {
 	this->fileOut->close();
 }

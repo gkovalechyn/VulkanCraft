@@ -27,6 +27,9 @@ namespace VulkanCraft {
 			Logger();
 			~Logger();
 			
+			Logger(const Logger& other) = delete;
+			Logger(Logger&& other) = delete;
+
 			static void vaLog(const LogLevel& level, const char* format, ...);
 			static void log(const LogLevel& level, const std::string& message);
 			static void debug(const std::string& message);
@@ -42,8 +45,6 @@ namespace VulkanCraft {
 
 			static void setMinLogLevel(LogLevel level);
 		private:
-			
-
 			static std::unique_ptr<Logger> instance;
 
 			bool logToConsole = true;
