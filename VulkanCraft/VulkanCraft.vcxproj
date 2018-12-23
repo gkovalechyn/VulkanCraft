@@ -121,7 +121,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Configuration.cpp" />
-    <ClCompile Include="DeferredPipeline.cpp" />
+    <ClCompile Include="Constants.cpp" />
+    <ClCompile Include="ForwardPipeline.cpp" />
     <ClCompile Include="GraphicalDevice.cpp" />
     <ClCompile Include="GraphicsPipeline.cpp" />
     <ClCompile Include="Logger.cpp" />
@@ -134,8 +135,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Configuration.h" />
-    <ClInclude Include="DeferredPipeline.h" />
+    <ClInclude Include="Constants.h" />
     <ClInclude Include="FileUtils.h" />
+    <ClInclude Include="ForwardPipeline.h" />
     <ClInclude Include="GlobalDefines.h" />
     <ClInclude Include="GraphicalDevice.h" />
     <ClInclude Include="GraphicsDefs.h" />
@@ -150,8 +152,10 @@
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="default.frag" />
-    <None Include="default.vert" />
+    <None Include="..\Resources\Pipelines\Example.json" />
+    <None Include="..\Resources\Pipelines\Forward.json" />
+    <None Include="..\Resources\Shaders\default.frag" />
+    <None Include="..\Resources\Shaders\default.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

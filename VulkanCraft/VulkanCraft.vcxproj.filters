@@ -25,11 +25,14 @@
     <Filter Include="Source Files\Core">
       <UniqueIdentifier>{5e1f0e21-251d-46da-a0ab-6048fe268bdf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files\Shaders">
-      <UniqueIdentifier>{0beb15c9-3d4a-43f4-b1fe-b4b4ef739b58}</UniqueIdentifier>
-    </Filter>
     <Filter Include="lib">
       <UniqueIdentifier>{e276b1e2-d7cb-47b1-9b12-ae67c65f353e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Shaders">
+      <UniqueIdentifier>{b5bd7754-5e67-43a7-add6-c57486b9e896}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Pipelines">
+      <UniqueIdentifier>{3f3bd8b4-8e70-4c75-81e4-03faa8c7ee5b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -60,10 +63,13 @@
     <ClCompile Include="ShaderFactory.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="DeferredPipeline.cpp">
+    <ClCompile Include="Configuration.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="ForwardPipeline.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Configuration.cpp">
+    <ClCompile Include="Constants.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
   </ItemGroup>
@@ -107,19 +113,28 @@
     <ClInclude Include="ShaderFactory.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="DeferredPipeline.h">
+    <ClInclude Include="Configuration.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="ForwardPipeline.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Configuration.h">
+    <ClInclude Include="Constants.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="default.vert">
+    <None Include="..\Resources\Shaders\default.vert">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="default.frag">
+    <None Include="..\Resources\Shaders\default.frag">
       <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="..\Resources\Pipelines\Forward.json">
+      <Filter>Resource Files\Pipelines</Filter>
+    </None>
+    <None Include="..\Resources\Pipelines\Example.json">
+      <Filter>Resource Files\Pipelines</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -12,6 +12,7 @@
 
 namespace VulkanCraft {
 	namespace Graphics {
+
 		class RenderingEngine {
 		public:
 			RenderingEngine();
