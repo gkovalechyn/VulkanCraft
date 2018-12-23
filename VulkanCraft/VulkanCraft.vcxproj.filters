@@ -72,6 +72,9 @@
     <ClCompile Include="Constants.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
+    <ClCompile Include="VCraft.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -122,6 +125,12 @@
     <ClInclude Include="Constants.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
+    <ClInclude Include="VCraft.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigurationError.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Resources\Shaders\default.vert">
@@ -130,10 +139,10 @@
     <None Include="..\Resources\Shaders\default.frag">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="..\Resources\Pipelines\Forward.json">
+    <None Include="Resources\Pipelines\Example.json">
       <Filter>Resource Files\Pipelines</Filter>
     </None>
-    <None Include="..\Resources\Pipelines\Example.json">
+    <None Include="Resources\Pipelines\Forward.json">
       <Filter>Resource Files\Pipelines</Filter>
     </None>
   </ItemGroup>

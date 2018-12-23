@@ -132,6 +132,7 @@
     <ClCompile Include="ShaderFactory.cpp" />
     <ClCompile Include="Swapchain.cpp" />
     <ClCompile Include="Util.cpp" />
+    <ClCompile Include="VCraft.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Configuration.h" />
@@ -146,16 +147,18 @@
     <ClInclude Include="Logger.h" />
     <ClInclude Include="RenderingEngine.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="ConfigurationError.h" />
     <ClInclude Include="ShaderFactory.h" />
     <ClInclude Include="Swapchain.h" />
     <ClInclude Include="Util.h" />
+    <ClInclude Include="VCraft.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Resources\Pipelines\Example.json" />
-    <None Include="..\Resources\Pipelines\Forward.json" />
     <None Include="..\Resources\Shaders\default.frag" />
     <None Include="..\Resources\Shaders\default.vert" />
+    <None Include="Resources\Pipelines\Example.json" />
+    <None Include="Resources\Pipelines\Forward.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -7,9 +7,14 @@ ShaderFactory::~ShaderFactory() {
 
 }
 
-Shader * VulkanCraft::Graphics::ShaderFactory::loadFromConfiguration(nlohmann::json shaderConfig) {
+Shader * VulkanCraft::Graphics::ShaderFactory::loadFromConfiguration(vk::ShaderStageFlags stage, nlohmann::json shaderConfig) {
 	std::string path = shaderConfig["path"].get<std::string>();
 	auto fileData = Core::FileUtils::readFileEntirely(path);
+	std::unique_ptr<Shader> shader = std::make_unique<Shader>();
+
+	shader->setStage(stage);
+	shader->setCode(fileData);
+
 	
 }
 

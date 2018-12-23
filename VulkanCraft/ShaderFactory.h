@@ -17,7 +17,7 @@ namespace VulkanCraft {
 			ShaderFactory(const ShaderFactory& other) = delete;
 			ShaderFactory(ShaderFactory&& other) = delete;
 
-			Shader* loadFromConfiguration(nlohmann::json shaderConfig);
+			Shader* loadFromConfiguration(vk::ShaderStageFlags stage, nlohmann::json shaderConfig);
 			Shader* getShader(const std::string& name) noexcept;
 		private:
 			vk::Device device;
