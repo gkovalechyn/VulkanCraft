@@ -15,7 +15,7 @@ namespace VulkanCraft {
 				return std::string(buffer);
 			}
 
-			inline std::tm localtime_xp(const std::time_t timer) {
+			static inline std::tm localtime_xp(const std::time_t timer) {
 				std::tm bt{};
 #if defined(__unix__)
 				localtime_r(&timer, &bt);
