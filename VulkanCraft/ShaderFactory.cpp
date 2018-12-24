@@ -21,6 +21,10 @@ Shader * VulkanCraft::Graphics::ShaderFactory::createFromConfiguration(vk::Shade
 	shader->stage = stage;
 	shader->code = fileData;
 	shader->handle = shaderModule;
+
+	throw std::exception("NOT IMPLEMENTED");
+
+	return nullptr;
 }
 
 Shader * VulkanCraft::Graphics::ShaderFactory::getShader(const std::string & name) noexcept {
