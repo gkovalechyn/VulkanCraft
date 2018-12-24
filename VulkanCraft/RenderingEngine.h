@@ -22,8 +22,7 @@ namespace VulkanCraft {
 			RenderingEngine(RenderingEngine&& other) = delete;
 
 			void initialize(GLFWwindow* window);
-			void initializeVulkan();
-			void initializeGraphicalDevice();
+			
 
 			void registerPipeline(std::string name, GraphicsPipeline* pipeline);
 
@@ -43,7 +42,8 @@ namespace VulkanCraft {
 			std::vector<const char*> requiredLayers = {};
 #endif// DEBUG
 
-			
+			void initializeVulkan();
+			void initializeGraphicalDevice();
 		};
 	}
 }
