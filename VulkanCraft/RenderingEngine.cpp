@@ -28,6 +28,7 @@ RenderingEngine::~RenderingEngine() {
 void RenderingEngine::initialize(GLFWwindow * window) {
 	this->window = window;
 	this->initializeVulkan();
+	this->initializeGraphicalDevice();
 }
 
 void RenderingEngine::initializeVulkan() {
@@ -76,8 +77,6 @@ void RenderingEngine::initializeVulkan() {
 
 	Core::Logger::debug("Created debug report callback");
 #endif
-
-	this->initializeGraphicalDevice();
 }
 
 void VulkanCraft::Graphics::RenderingEngine::initializeGraphicalDevice() {
