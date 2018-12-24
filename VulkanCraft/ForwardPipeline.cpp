@@ -26,14 +26,18 @@ ForwardPipeline::~ForwardPipeline() {
 }
 
 VulkanCraft::Graphics::ForwardPipeline::ForwardPipeline(ForwardPipeline && rhs): device(rhs.device), viewport(rhs.viewport) {
+	this->description = std::move(rhs.description);
 	this->shaderModules.vertex = rhs.shaderModules.vertex;
 	this->shaderModules.fragment = rhs.shaderModules.fragment;
 	
 	this->handle = rhs.handle;
 	this->layout = rhs.layout;
+	this->renderPass = rhs.renderPass;
 
 	rhs.layout = nullptr;
 	rhs.handle = nullptr;
+	rhs.renderPass = nullptr;
+
 	rhs.shaderModules.vertex = nullptr;
 	rhs.shaderModules.fragment = nullptr;
 }
@@ -163,8 +167,8 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 		.setY(0)
 		.setMinDepth(0)
 		.setMaxDepth(1)
-		.setWidth(this->viewport.width)
-		.setHeight(this->viewport.height);
+		.setWidth(static_cast<float>(this->viewport.width))
+		.setHeight(static_cast<float>(this->viewport.height));
 
 	vk::Rect2D scissorRect;
 	scissorRect
