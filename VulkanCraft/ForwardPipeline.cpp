@@ -3,14 +3,39 @@
 using namespace VulkanCraft;
 using namespace VulkanCraft::Graphics;
 
-ForwardPipeline::ForwardPipeline(const vk::Device& logicalDevice) : device(logicalDevice){
+ForwardPipeline::ForwardPipeline(const vk::Device& logicalDevice, const vk::Extent2D viewport) : device(logicalDevice), viewport(viewport){
 	this->createShaderModules();
+	this->createLayout();
+	this->createRenderPass();
+	this->createPipeline();
 }
 
 
 ForwardPipeline::~ForwardPipeline() {
-	this->device.destroyShaderModule(this->shaderModules.vertex);
-	this->device.destroyShaderModule(this->shaderModules.fragment);
+	if (this->shaderModules.vertex) {
+		this->device.destroyShaderModule(this->shaderModules.vertex);
+	}
+
+	if (this->shaderModules.fragment) {
+		this->device.destroyShaderModule(this->shaderModules.fragment);
+	}
+
+	if (this->handle) {
+		this->device.destroyPipeline(this->handle);
+	}
+}
+
+VulkanCraft::Graphics::ForwardPipeline::ForwardPipeline(ForwardPipeline && rhs): device(rhs.device), viewport(rhs.viewport) {
+	this->shaderModules.vertex = rhs.shaderModules.vertex;
+	this->shaderModules.fragment = rhs.shaderModules.fragment;
+	
+	this->handle = rhs.handle;
+	this->layout = rhs.layout;
+
+	rhs.layout = nullptr;
+	rhs.handle = nullptr;
+	rhs.shaderModules.vertex = nullptr;
+	rhs.shaderModules.fragment = nullptr;
 }
 
 vk::Pipeline ForwardPipeline::getHandle() {
@@ -42,6 +67,42 @@ void VulkanCraft::Graphics::ForwardPipeline::createShaderModules() {
 	this->shaderModules.fragment = this->device.createShaderModule(fragmentCreateInfo);
 }
 
+void VulkanCraft::Graphics::ForwardPipeline::createLayout() {
+	vk::PipelineLayoutCreateInfo layoutCreateInfo;
+	this->layout = this->device.createPipelineLayout(layoutCreateInfo);
+}
+
+void VulkanCraft::Graphics::ForwardPipeline::createRenderPass() {
+	vk::AttachmentDescription colorAttachment;
+	colorAttachment
+		.setLoadOp(vk::AttachmentLoadOp::eClear)
+		.setStoreOp(vk::AttachmentStoreOp::eStore)
+		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
+		.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
+
+	vk::AttachmentReference colorReference;
+	colorReference
+		.setAttachment(0)
+		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+	vk::SubpassDescription subpass;
+	subpass
+		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
+		.setColorAttachmentCount(1)
+		.setPColorAttachments(&colorReference);
+
+	vk::RenderPassCreateInfo renderPassCreateInfo;
+	renderPassCreateInfo
+		.setAttachmentCount(1)
+		.setPAttachments(&colorAttachment)
+		.setSubpassCount(1)
+		.setPSubpasses(&subpass);
+
+	this->renderPass = this->device.createRenderPass(renderPassCreateInfo);
+}
+
 void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 	vk::PipelineShaderStageCreateInfo vertexStageCreateInfo;
 	vk::PipelineShaderStageCreateInfo fragmentStageCreateInfo;
@@ -56,9 +117,112 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 		.setPName("main")
 		.setModule(this->shaderModules.fragment);
 
+	//Vertex input
 	vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
-}
 
+	vk::VertexInputBindingDescription vertexInputBindingDescription;
+
+	vertexInputBindingDescription
+		.setBinding(0)
+		.setInputRate(vk::VertexInputRate::eVertex)
+		.setStride(sizeof(Vertex));
+
+	vk::VertexInputAttributeDescription posAttributeDescription;
+	vk::VertexInputAttributeDescription uvAttributeDescription;
+
+	posAttributeDescription
+		.setBinding(0)
+		.setFormat(vk::Format::eR32G32B32Sfloat)
+		.setLocation(0)
+		.setOffset(offsetof(Vertex, position));
+
+	uvAttributeDescription
+		.setBinding(0)
+		.setFormat(vk::Format::eR32G32Sfloat)
+		.setLocation(1)
+		.setOffset(offsetof(Vertex, uv));
+
+	vk::VertexInputAttributeDescription attributes[] = { posAttributeDescription, uvAttributeDescription };
+	vk::VertexInputBindingDescription bindings[] = { vertexInputBindingDescription };
+
+	vertexInputStateCreateInfo
+		.setPVertexAttributeDescriptions(attributes)
+		.setVertexAttributeDescriptionCount(2)
+		.setPVertexBindingDescriptions(bindings)
+		.setVertexBindingDescriptionCount(1);
+
+	vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
+	inputAssemblyInfo
+		.setTopology(vk::PrimitiveTopology::eTriangleList)
+		.setPrimitiveRestartEnable(true);
+
+	//Viewport
+	vk::Viewport viewport;
+	viewport
+		.setX(0)
+		.setY(0)
+		.setMinDepth(0)
+		.setMaxDepth(1)
+		.setWidth(this->viewport.width)
+		.setHeight(this->viewport.height);
+
+	vk::Rect2D scissorRect;
+	scissorRect
+		.setOffset({ 0, 0 })
+		.setExtent(this->viewport);
+
+	vk::PipelineViewportStateCreateInfo viewportCreateInfo;
+	viewportCreateInfo
+		.setPScissors(&scissorRect)
+		.setScissorCount(1)
+		.setPViewports(&viewport)
+		.setViewportCount(1);
+
+	//Rasterization
+	vk::PipelineRasterizationStateCreateInfo rasterizationCreateInfo;
+	rasterizationCreateInfo
+		.setCullMode(vk::CullModeFlagBits::eBack)
+		.setFrontFace(vk::FrontFace::eClockwise)
+		.setDepthClampEnable(false)
+		.setPolygonMode(vk::PolygonMode::eFill)
+
+		.setLineWidth(1.0f)
+
+		.setDepthBiasEnable(false);
+
+	//Multisampling
+	vk::PipelineMultisampleStateCreateInfo multisamplingCreateInfo;
+	multisamplingCreateInfo
+		.setSampleShadingEnable(false)
+		.setRasterizationSamples(vk::SampleCountFlagBits::e1);
+
+	//Color blending
+	vk::PipelineColorBlendAttachmentState blendAttachment;
+	blendAttachment
+		.setBlendEnable(false)
+		.setColorWriteMask(vk::ColorComponentFlagBits::eA | vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB);
+
+	vk::PipelineColorBlendStateCreateInfo colorBlendCreateInfo;
+	colorBlendCreateInfo
+		.setLogicOp(vk::LogicOp::eNoOp)
+		.setLogicOpEnable(false)
+		.setAttachmentCount(1)
+		.setPAttachments(&blendAttachment);
+	
+	vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
+	pipelineCreateInfo
+		.setLayout(this->layout)
+		.setRenderPass(this->renderPass)
+		.setSubpass(0)
+		.setPVertexInputState(&vertexInputStateCreateInfo)
+		.setPInputAssemblyState(&inputAssemblyInfo)
+		.setPColorBlendState(&colorBlendCreateInfo)
+		.setPViewportState(&viewportCreateInfo)
+		.setPRasterizationState(&rasterizationCreateInfo)
+		.setPMultisampleState(&multisamplingCreateInfo);
+
+	this->handle = this->device.createGraphicsPipeline(nullptr, pipelineCreateInfo);
+}
 
 /*
 std::unique_ptr<ForwardPipeline> VulkanCraft::Graphics::ForwardPipeline::fromConfiguration(nlohmann::json file) {
