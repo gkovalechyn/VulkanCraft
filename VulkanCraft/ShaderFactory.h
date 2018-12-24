@@ -17,7 +17,23 @@ namespace VulkanCraft {
 			ShaderFactory(const ShaderFactory& other) = delete;
 			ShaderFactory(ShaderFactory&& other) = delete;
 
-			Shader* loadFromConfiguration(vk::ShaderStageFlags stage, nlohmann::json shaderConfig);
+			/**
+			<summary>
+				Creates a shader instance and caches it based on the configuration json object
+			</summary>
+
+			<param name="stage">Which stage the shader belongs to</param>
+			<param name="shaderConfig">JSON object that is the shader configuration</param>
+			*/
+			Shader* createFromConfiguration(vk::ShaderStageFlags stage, nlohmann::json shaderConfig);
+
+			/**
+			<summary>
+				Gets a currently cached shader instance.
+			</summary>
+
+			<returns>A reference to a shader if it is cached, nullptr otherwise.</returns>
+			*/
 			Shader* getShader(const std::string& name) noexcept;
 		private:
 			vk::Device device;

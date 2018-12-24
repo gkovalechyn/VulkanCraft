@@ -5,33 +5,11 @@
     "cullingMode": ""
   },
 
+
   "shaders": {
-    "vertex": {
-      "path": "Shaders/example.vert.spv",
-
-      "inputs": {},
-      "outputs": {}
-    },
-
-    "tesselation": {
-      "path": "Shaders/example.tess.spv",
-
-      "inputs": {},
-      "outputs": {}
-    },
-
-    "geometry": {
-      "path": "Shaders/example.geom.spv",
-
-      "inputs": {},
-      "outputs": {}
-    },
-
-    "fragment": {
-      "path": "Shaders/example.frag.spv",
-
-      "inputs": {},
-      "outputs": {}
-    }
+    "vertex": "Shaders/example.vert.spv",
+    "tesselation": "Shaders/example.tess.spv",
+    "geometry": "Shaders/example.geom.spv",
+    "fragment": "Shaders/example.frag.spv"
   }
 }

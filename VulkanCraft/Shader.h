@@ -8,10 +8,6 @@ namespace VulkanCraft {
 			Shader();
 			~Shader();
 
-			void setStage(const vk::ShaderStageFlags stage);
-			void setCode(const std::vector<char>& data);
-			void build();
-
 			vk::ShaderModule getHandle();
 			vk::DescriptorSetLayout getDescriptorSetLayout();
 
@@ -22,6 +18,8 @@ namespace VulkanCraft {
 			vk::DescriptorSetLayout layout;
 			vk::ShaderModule handle;
 			vk::ShaderStageFlags stage;
+
+			std::vector<char> code;
 		};
 	}
 }

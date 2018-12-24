@@ -2,13 +2,14 @@
 #include "GraphicsPipeline.h"
 #include "json.hpp"
 #include "ConfigurationError.h"
+#include "FileUtils.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
 
 		class ForwardPipeline : public GraphicsPipeline {
 		public:
-			ForwardPipeline();
+			ForwardPipeline(const vk::Device& logicalDevice);
 			~ForwardPipeline();
 
 			ForwardPipeline(const ForwardPipeline& other) = delete;
@@ -19,18 +20,21 @@ namespace VulkanCraft {
 			virtual void recreate() override;
 			virtual void cleanup() override;
 
-			static std::unique_ptr<ForwardPipeline> fromConfiguration(nlohmann::json file);
-
 		private:
+			const vk::Device& device;
 			std::string description;
 
-			vk::ShaderModule vertexShaderModule;
-			vk::ShaderModule tesselationShaderModule;
-			vk::ShaderModule geometryShaderModule;
-			vk::ShaderModule fragmentShaderModule;
+			struct ShaderModules {
+				vk::ShaderModule vertex;
+				vk::ShaderModule tesselation;
+				vk::ShaderModule geometry;
+				vk::ShaderModule fragment;
+			} shaderModules;
 
 			vk::Pipeline handle;
 
+			void createShaderModules();
+			void createPipeline();
 		};
 	};
 };

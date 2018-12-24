@@ -8,20 +8,7 @@
   "constants": {},
 
   "shaders": {
-    "vertex": {
-      "name": "default",
-      "path": "Resources/Shaders/default.vert.spv",
-
-      "inputs": {},
-      "outputs": {}
-    },
-
-    "fragment": {
-      "name": "default",
-      "path": "Resources/Shaders/default.frag.spv",
-
-      "inputs": {},
-      "outputs": {}
-    }
+    "vertex": "Resources/Shaders/default.vert.spv",
+    "fragment": "Resources/Shaders/default.frag.spv"
   }
 }
