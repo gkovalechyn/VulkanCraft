@@ -11,6 +11,6 @@ VCraft::VCraft() {
 VCraft::~VCraft() {
 }
 
-Graphics::RenderingEngine& VulkanCraft::Core::VCraft::getRenderingEngine() {
+Graphics::RenderingEngine& VulkanCraft::Core::VCraft::getRenderingEngine() noexcept{
 	return *this->renderingEngine;
 }
