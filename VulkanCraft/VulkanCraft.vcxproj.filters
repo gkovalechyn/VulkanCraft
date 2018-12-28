@@ -133,17 +133,26 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Resources\Shaders\default.vert">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="..\Resources\Shaders\default.frag">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
     <None Include="Resources\Pipelines\Example.json">
       <Filter>Resource Files\Pipelines</Filter>
     </None>
     <None Include="Resources\Pipelines\Forward.json">
       <Filter>Resource Files\Pipelines</Filter>
+    </None>
+    <None Include="Resources\Shaders\forward.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\forward.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\default.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\default.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\compile.bat.example">
+      <Filter>Resource Files\Shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

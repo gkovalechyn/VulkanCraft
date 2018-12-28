@@ -23,7 +23,7 @@ std::unique_ptr<GraphicalDevice> GraphicalDevice::getGraphicalDevice(
 	uint32_t queueFamilyIndex = 0;
 
 #ifdef DEBUG
-	Core::Logger::vaLog(Core::LogLevel::eDanger, "Queue families found: %d", queueFamilyProperties.size());
+	Core::Logger::vaLog(Core::LogLevel::eDebug, "Queue families found: %d", queueFamilyProperties.size());
 #endif
 
 	for (auto queueFamilyProperty : queueFamilyProperties) {

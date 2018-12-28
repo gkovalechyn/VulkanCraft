@@ -12,17 +12,12 @@ ForwardPipeline::ForwardPipeline(const vk::Device& logicalDevice, const vk::Exte
 
 
 ForwardPipeline::~ForwardPipeline() {
-	if (this->shaderModules.vertex) {
-		this->device.destroyShaderModule(this->shaderModules.vertex);
-	}
+	this->device.destroyPipeline(this->handle);
+	this->device.destroyPipelineLayout(this->layout);
 
-	if (this->shaderModules.fragment) {
-		this->device.destroyShaderModule(this->shaderModules.fragment);
-	}
-
-	if (this->handle) {
-		this->device.destroyPipeline(this->handle);
-	}
+	
+	this->device.destroyShaderModule(this->shaderModules.vertex);
+	this->device.destroyShaderModule(this->shaderModules.fragment);	
 }
 
 VulkanCraft::Graphics::ForwardPipeline::ForwardPipeline(ForwardPipeline && rhs): device(rhs.device), viewport(rhs.viewport) {
@@ -40,6 +35,14 @@ VulkanCraft::Graphics::ForwardPipeline::ForwardPipeline(ForwardPipeline && rhs):
 
 	rhs.shaderModules.vertex = nullptr;
 	rhs.shaderModules.fragment = nullptr;
+}
+
+void VulkanCraft::Graphics::ForwardPipeline::setViewport(vk::Extent2D viewport) noexcept {
+	this->viewport = viewport;
+}
+
+vk::Extent2D VulkanCraft::Graphics::ForwardPipeline::getViewport() noexcept {
+	return this->viewport;
 }
 
 vk::Pipeline ForwardPipeline::getHandle() {
@@ -213,9 +216,12 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 		.setAttachmentCount(1)
 		.setPAttachments(&blendAttachment);
 	
+	vk::PipelineShaderStageCreateInfo shaderStages[] = { vertexStageCreateInfo, fragmentStageCreateInfo };
 	vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
 	pipelineCreateInfo
 		.setLayout(this->layout)
+		.setStageCount(2)
+		.setPStages(shaderStages)
 		.setRenderPass(this->renderPass)
 		.setSubpass(0)
 		.setPVertexInputState(&vertexInputStateCreateInfo)
@@ -226,6 +232,10 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 		.setPMultisampleState(&multisamplingCreateInfo);
 
 	this->handle = this->device.createGraphicsPipeline(nullptr, pipelineCreateInfo);
+}
+
+vk::RenderPass VulkanCraft::Graphics::ForwardPipeline::getRenderPass() {
+	return this->renderPass;
 }
 
 /*

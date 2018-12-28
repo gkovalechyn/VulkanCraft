@@ -21,6 +21,7 @@ namespace VulkanCraft {
 
 			// Inherited via GraphicsPipeline
 			virtual vk::Pipeline getHandle() override;
+			virtual vk::RenderPass getRenderPass() override;
 			virtual void recreate() override;
 			virtual void cleanup() override;
 
@@ -40,11 +41,15 @@ namespace VulkanCraft {
 			vk::PipelineLayout layout;
 			vk::RenderPass renderPass;
 			vk::Pipeline handle;
+			std::vector<vk::Framebuffer> framebuffers;
 
 			void createShaderModules();
 			void createLayout();
 			void createRenderPass();
 			void createPipeline();
+
+			// Inherited via GraphicsPipeline
+			
 		};
 	};
 };

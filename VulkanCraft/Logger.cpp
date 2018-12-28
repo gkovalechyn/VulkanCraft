@@ -17,7 +17,7 @@ Logger::~Logger() {
 }
 
 void VulkanCraft::Core::Logger::vaLog(const LogLevel & level, const char* format, ...) {
-	std::vector<char> buffer(strlen(format) * 2);
+	std::vector<char> buffer(128);
 
 	std::va_list args;
 	va_start(args, format);

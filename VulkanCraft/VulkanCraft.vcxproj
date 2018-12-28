@@ -161,10 +161,13 @@
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Resources\Shaders\default.frag" />
-    <None Include="..\Resources\Shaders\default.vert" />
     <None Include="Resources\Pipelines\Example.json" />
     <None Include="Resources\Pipelines\Forward.json" />
+    <None Include="Resources\Shaders\compile.bat.example" />
+    <None Include="Resources\Shaders\default.frag" />
+    <None Include="Resources\Shaders\default.vert" />
+    <None Include="Resources\Shaders\forward.frag" />
+    <None Include="Resources\Shaders\forward.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
