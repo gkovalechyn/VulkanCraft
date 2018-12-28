@@ -78,7 +78,7 @@ void RenderingEngine::initializeVulkan() {
 #ifdef DEBUG
 	VkDebugReportCallbackCreateInfoEXT  debugCreateInfo;
 	debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-	debugCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
+	debugCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
 	debugCreateInfo.pfnCallback = &debugCallback;
 
 	PFN_vkCreateDebugReportCallbackEXT createDebugReportCallbackFunction = (PFN_vkCreateDebugReportCallbackEXT) this->vkInstance.getProcAddr("vkCreateDebugReportCallbackEXT");
