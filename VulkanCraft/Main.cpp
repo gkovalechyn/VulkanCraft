@@ -13,14 +13,14 @@ int main(int argc, char* argv[]) {
 	window = glfwCreateWindow(800, 600, "Test", nullptr, nullptr);
 
 	
-	VulkanCraft::Graphics::RenderingEngine renderingEngine;
-	renderingEngine.initialize(window);
+	VulkanCraft::Graphics::RenderingEngine* renderingEngine = new VulkanCraft::Graphics::RenderingEngine();
+	renderingEngine->initialize(window);
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 	}
 
-	renderingEngine.terminate();
+	delete renderingEngine;
 	glfwDestroyWindow(window);
 	glfwTerminate();
 }

@@ -1,0 +1,15 @@
+{
+  "description": "Example pipeline",
+
+  "settings": {
+    "cullingMode": ""
+  },
+
+
+  "shaders": {
+    "vertex": "Shaders/example.vert.spv",
+    "tesselation": "Shaders/example.tess.spv",
+    "geometry": "Shaders/example.geom.spv",
+    "fragment": "Shaders/example.frag.spv"
+  }
+}

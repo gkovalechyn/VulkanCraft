@@ -5,21 +5,19 @@ std::unique_ptr<Logger> Logger::instance;
 
 Logger::Logger() {
 	time_t time = std::time(nullptr);
-	std::string filename = formatDate("Log-%Y-%m-%d.log", &localtime_xp(time));
+	std::string filename = Util::formatDate("Log-%Y-%m-%d.log", &Util::localtime_xp(time));
 	this->fileOut = new std::ofstream(filename, std::ofstream::trunc);
 
 	if (this->fileOut == nullptr) {
 		throw std::runtime_error("Could not log file for writing.");
 	}
 }
-
-
 Logger::~Logger() {
 	this->fileOut->close();
 }
 
 void VulkanCraft::Core::Logger::vaLog(const LogLevel & level, const char* format, ...) {
-	std::vector<char> buffer(strlen(format) * 2);
+	std::vector<char> buffer(128);
 
 	std::va_list args;
 	va_start(args, format);
@@ -39,7 +37,7 @@ void VulkanCraft::Core::Logger::log(const LogLevel & level, const std::string& m
 	}
 
 	time_t time = std::time(nullptr);
-	std::string timeString = formatDate("[%Y-%m-%d %I:%M:%S]", &localtime_xp(time));
+	std::string timeString = Util::formatDate("[%Y-%m-%d %I:%M:%S]", &Util::localtime_xp(time));
 	std::string logLevelString;
 
 	switch (level) {

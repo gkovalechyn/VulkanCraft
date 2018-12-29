@@ -4,12 +4,8 @@ using namespace VulkanCraft;
 using namespace VulkanCraft::Graphics;
 
 
-Swapchain::Swapchain(const GraphicalDevice& gd, const vk::SurfaceKHR& surface) {
+Swapchain::Swapchain(const GraphicalDevice& gd, const vk::SurfaceKHR& surface, const vk::SurfaceFormatKHR format, const vk::PresentModeKHR presentMode, const vk::Extent2D surfaceExtent): device(gd) {
 	vk::SurfaceCapabilitiesKHR surfaceCapabilities = gd.physicalDevice.getSurfaceCapabilitiesKHR(surface);
-
-	this->surfaceFormat = this->getBestFormat(gd.physicalDevice.getSurfaceFormatsKHR(surface));
-	this->presentMode = this->getBestPresentMode(gd.physicalDevice.getSurfacePresentModesKHR(surface));
-	this->extent = this->chooseSwapExtent(surfaceCapabilities);
 
 	uint32_t imageCount = surfaceCapabilities.minImageCount + 1;
 	if (surfaceCapabilities.maxImageCount > 0 && imageCount > surfaceCapabilities.maxImageCount) {
@@ -19,14 +15,14 @@ Swapchain::Swapchain(const GraphicalDevice& gd, const vk::SurfaceKHR& surface) {
 	vk::SwapchainCreateInfoKHR createInfo;
 	createInfo.setMinImageCount(imageCount)
 		.setSurface(surface)
-		.setImageFormat(this->surfaceFormat.format)
-		.setImageColorSpace(this->surfaceFormat.colorSpace)
-		.setImageExtent(this->extent)
+		.setImageFormat(format.format)
+		.setImageColorSpace(format.colorSpace)
+		.setImageExtent(surfaceExtent)
 		.setImageArrayLayers(1)
 		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)
 		.setPreTransform(surfaceCapabilities.currentTransform)
 		.setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)
-		.setPresentMode(this->presentMode)
+		.setPresentMode(presentMode)
 		.setClipped(true)
 		.setOldSwapchain(nullptr);
 
@@ -49,7 +45,7 @@ Swapchain::Swapchain(const GraphicalDevice& gd, const vk::SurfaceKHR& surface) {
 		vk::ImageViewCreateInfo ivCreateInfo;
 
 		ivCreateInfo.setImage(swapchainImages[i])
-			.setFormat(this->surfaceFormat.format)
+			.setFormat(format.format)
 			.setViewType(vk::ImageViewType::e2D);
 
 		vk::ComponentMapping mapping;
@@ -78,53 +74,9 @@ Swapchain::Swapchain(const GraphicalDevice& gd, const vk::SurfaceKHR& surface) {
 
 
 Swapchain::~Swapchain() {
-}
-
-void VulkanCraft::Graphics::Swapchain::cleanup(const GraphicalDevice& gd) {
 	for (ImageView view : this->imageViews) {
-		gd.logicalDevice.destroyImageView(view.view);
+		this->device.logicalDevice.destroyImageView(view.view);
 	}
 
-	gd.logicalDevice.destroySwapchainKHR(this->handle);
-}
-
-vk::SurfaceFormatKHR Swapchain::getBestFormat(std::vector<vk::SurfaceFormatKHR> availableFormats) {
-	if (availableFormats.size() == 1 && availableFormats[0].format == vk::Format::eUndefined) {
-		return { vk::Format::eB8G8R8A8Unorm, vk::ColorSpaceKHR::eSrgbNonlinear };
-	}
-
-	for (const auto& availableFormat : availableFormats) {
-		if (availableFormat.format == vk::Format::eB8G8R8A8Unorm && availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
-			return availableFormat;
-		}
-	}
-
-	return availableFormats[0];
-}
-
-vk::PresentModeKHR Swapchain::getBestPresentMode(std::vector<vk::PresentModeKHR> availablePresentModes) {
-	vk::PresentModeKHR bestMode = vk::PresentModeKHR::eFifo;
-
-	for (const auto& availablePresentMode : availablePresentModes) {
-		if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
-			return availablePresentMode;
-		} else if (availablePresentMode == vk::PresentModeKHR::eImmediate) {
-			bestMode = availablePresentMode;
-		}
-	}
-
-	return bestMode;
-}
-
-vk::Extent2D Swapchain::chooseSwapExtent(vk::SurfaceCapabilitiesKHR capabilities) {
-	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-		return capabilities.currentExtent;
-	} else {
-		VkExtent2D actualExtent = capabilities.currentExtent;
-
-		actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
-		actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
-
-		return actualExtent;
-	}
+	this->device.logicalDevice.destroySwapchainKHR(this->handle);
 }

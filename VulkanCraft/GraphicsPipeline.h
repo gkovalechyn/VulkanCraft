@@ -6,11 +6,14 @@ namespace VulkanCraft {
 
 		public:
 			GraphicsPipeline();
-			~GraphicsPipeline();
+			virtual ~GraphicsPipeline();
 	
 			virtual vk::Pipeline getHandle() = 0;
+			virtual vk::RenderPass getRenderPass() = 0;
+
 			virtual void recreate() = 0;
 			virtual void cleanup() = 0;
+
 		};
 	}
 }

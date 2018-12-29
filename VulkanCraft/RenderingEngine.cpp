@@ -12,8 +12,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	const char* layerPrefix,
 	const char* msg,
 	void* userData) {
-
-	Core::Logger::debug(std::string(layerPrefix) + ":" + msg);
+	Core::Logger::debug(std::string(layerPrefix) + ": " + msg);
+	//Core::Logger::vaLog(Core::LogLevel::eDebug, "%s: %s", std::string(layerPrefix), msg);
 
 	return VK_FALSE;
 }
@@ -23,17 +23,32 @@ RenderingEngine::RenderingEngine() {
 
 
 RenderingEngine::~RenderingEngine() {
+	this->vkInstance.destroySurfaceKHR(this->window.surface);
+
+#ifdef DEBUG
+	auto func = (PFN_vkDestroyDebugReportCallbackEXT)this->vkInstance.getProcAddr("vkDestroyDebugReportCallbackEXT");
+	if (func != nullptr) {
+		func((VkInstance)this->vkInstance, this->debugCallbackHandle, nullptr);
+	}
+#endif // DEBUG
+
+	this->vkInstance.destroy();
 }
 
 void RenderingEngine::initialize(GLFWwindow * window) {
-	this->window = window;
+	this->window.handle = window;
 	this->initializeVulkan();
+	this->initializeGraphicalDevice();
+
+	this->pipeline = std::make_unique<ForwardPipeline>(this->device->logicalDevice, this->window.surfaceExtent);
+
+	Core::Logger::debug("Created forward pipeline");
 }
 
 void RenderingEngine::initializeVulkan() {
 	vk::ApplicationInfo applicationInfo;
 	applicationInfo.setApiVersion(VK_API_VERSION_1_0)
-		.setPApplicationName("Vulkan thing")
+		.setPApplicationName("VulkanCraft")
 		.setApplicationVersion(VK_MAKE_VERSION(0, 0, 1))
 		.setPEngineName("No engine")
 		.setEngineVersion(VK_MAKE_VERSION(0, 0, 1));
@@ -76,33 +91,67 @@ void RenderingEngine::initializeVulkan() {
 
 	Core::Logger::debug("Created debug report callback");
 #endif
-
-	this->initializeGraphicalDevice();
 }
 
 void VulkanCraft::Graphics::RenderingEngine::initializeGraphicalDevice() {
 	VkSurfaceKHR surface;
-	glfwCreateWindowSurface(this->vkInstance, this->window, nullptr, &surface);
-	this->surface = surface;
+	glfwCreateWindowSurface(this->vkInstance, this->window.handle, nullptr, &surface);
+	this->window.surface = surface;
 
 	std::vector<const char*> requiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-	this->device = GraphicalDevice::getGraphicalDevice(this->vkInstance, requiredLayers, requiredExtensions, this->surface);
+	this->device = GraphicalDevice::getGraphicalDevice(this->vkInstance, requiredLayers, requiredExtensions, this->window.surface);
 
-	this->swapchain = std::make_unique<Swapchain>(*this->device, this->surface);
+	this->chooseBestWindowParameters();
+
+	this->swapchain = std::make_unique<Swapchain>(*this->device, this->window.surface, this->window.surfaceFormat, this->window.presentMode, this->window.surfaceExtent);
 }
 
-void RenderingEngine::terminate() {
-	this->swapchain->cleanup(*this->device);
-	this->vkInstance.destroySurfaceKHR(this->surface);
+void VulkanCraft::Graphics::RenderingEngine::chooseBestWindowParameters() {
+	vk::SurfaceCapabilitiesKHR surfaceCapabilities = this->device->physicalDevice.getSurfaceCapabilitiesKHR(this->window.surface);
+	std::vector<vk::SurfaceFormatKHR> availableFormats = this->device->physicalDevice.getSurfaceFormatsKHR(this->window.surface);
 
-#ifdef DEBUG
-	auto func = (PFN_vkDestroyDebugReportCallbackEXT)this->vkInstance.getProcAddr("vkDestroyDebugReportCallbackEXT");
-	if (func != nullptr) {
-		func((VkInstance)this->vkInstance, this->debugCallbackHandle, nullptr);
+	//Surface format
+	if (availableFormats.size() == 1 && availableFormats[0].format == vk::Format::eUndefined) {
+		Core::Logger::debug("Any format supported, picking best format: vk::Format::eB8G8R8A8Unorm");
+		this->window.surfaceFormat = { vk::Format::eB8G8R8A8Unorm, vk::ColorSpaceKHR::eSrgbNonlinear };
 	}
-#endif // DEBUG
 
-	this->device->destroy();
-	this->vkInstance.destroy();
+	for (const auto& availableFormat : availableFormats) {
+		if (availableFormat.format == vk::Format::eB8G8R8A8Unorm && availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+			this->window.surfaceFormat = availableFormat;
+			break;
+		}
+	}
+	if (this->window.surfaceFormat.format == vk::Format::eUndefined) {
+		Core::Logger::error("Could not find suitable surface format, selecting first available format");
+		this->window.surfaceFormat = availableFormats[0];
+	}
+
+	//Present mode
+	vk::PresentModeKHR bestMode = vk::PresentModeKHR::eFifo;
+	std::vector<vk::PresentModeKHR> availablePresentModes = this->device->physicalDevice.getSurfacePresentModesKHR(this->window.surface);
+
+	for (const auto& availablePresentMode : availablePresentModes) {
+		if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
+			bestMode = availablePresentMode;
+			break;
+		} else if (availablePresentMode == vk::PresentModeKHR::eImmediate) {
+			bestMode = availablePresentMode;
+		}
+	}
+	this->window.presentMode = bestMode;
+
+	//Surface extent
+	vk::SurfaceCapabilitiesKHR capabilities = this->device->physicalDevice.getSurfaceCapabilitiesKHR(this->window.surface);
+	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+		this->window.surfaceExtent = capabilities.currentExtent;
+	} else {
+		VkExtent2D actualExtent = capabilities.currentExtent;
+
+		actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
+		actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
+
+		this->window.surfaceExtent = actualExtent;
+	}
 }

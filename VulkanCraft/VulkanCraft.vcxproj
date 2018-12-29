@@ -82,6 +82,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+      <ShowProgress>LinkVerboseLib</ShowProgress>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -90,6 +93,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+      <ShowProgress>LinkVerboseLib</ShowProgress>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -120,7 +126,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DefaultPipeline.cpp" />
+    <ClCompile Include="Configuration.cpp" />
+    <ClCompile Include="Constants.cpp" />
+    <ClCompile Include="ForwardPipeline.cpp" />
     <ClCompile Include="GraphicalDevice.cpp" />
     <ClCompile Include="GraphicsPipeline.cpp" />
     <ClCompile Include="Logger.cpp" />
@@ -130,25 +138,36 @@
     <ClCompile Include="ShaderFactory.cpp" />
     <ClCompile Include="Swapchain.cpp" />
     <ClCompile Include="Util.cpp" />
+    <ClCompile Include="VCraft.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DefaultPipeline.h" />
+    <ClInclude Include="Configuration.h" />
+    <ClInclude Include="Constants.h" />
     <ClInclude Include="FileUtils.h" />
+    <ClInclude Include="ForwardPipeline.h" />
     <ClInclude Include="GlobalDefines.h" />
     <ClInclude Include="GraphicalDevice.h" />
     <ClInclude Include="GraphicsDefs.h" />
     <ClInclude Include="GraphicsPipeline.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="RenderingEngine.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="ConfigurationError.h" />
     <ClInclude Include="ShaderFactory.h" />
     <ClInclude Include="Swapchain.h" />
     <ClInclude Include="Util.h" />
+    <ClInclude Include="VCraft.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="default.frag" />
-    <None Include="default.vert" />
+    <None Include="Resources\Pipelines\Example.json" />
+    <None Include="Resources\Pipelines\Forward.json" />
+    <None Include="Resources\Shaders\compile.bat.example" />
+    <None Include="Resources\Shaders\default.frag" />
+    <None Include="Resources\Shaders\default.vert" />
+    <None Include="Resources\Shaders\forward.frag" />
+    <None Include="Resources\Shaders\forward.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

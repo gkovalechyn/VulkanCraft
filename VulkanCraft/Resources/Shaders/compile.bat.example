@@ -1,0 +1,2 @@
+<Path to glslangvalidator.exe> -S vert -o forward.vert.spv -V forward.vert
+<Path to glslangvalidator.exe> -S frag -o forward.frag.spv -V forward.frag

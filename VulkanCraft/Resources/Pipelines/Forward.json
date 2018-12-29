@@ -1,0 +1,14 @@
+{
+  "description": "Default forward rendering pipeline",
+
+  "settings": {
+    "cullingMode": ""
+  },
+
+  "constants": {},
+
+  "shaders": {
+    "vertex": "Resources/Shaders/default.vert.spv",
+    "fragment": "Resources/Shaders/default.frag.spv"
+  }
+}

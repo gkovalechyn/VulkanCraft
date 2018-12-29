@@ -8,27 +8,47 @@
 #include "Logger.h"
 #include "GraphicalDevice.h"
 #include "Swapchain.h"
+#include "GraphicsPipeline.h"
+#include "ForwardPipeline.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
+		struct PerFrameData {
+			vk::Framebuffer framebuffer;
+			vk::CommandBuffer commandBuffer;
+		};
+
+		struct WindowData {
+			GLFWwindow * handle;
+			vk::SurfaceKHR surface;
+			vk::SurfaceFormatKHR surfaceFormat;
+			vk::PresentModeKHR presentMode;
+			vk::Extent2D surfaceExtent;
+		};
+
 		class RenderingEngine {
 		public:
 			RenderingEngine();
 			~RenderingEngine();
 
-			void initialize(GLFWwindow* window);
-			void initializeVulkan();
-			void initializeGraphicalDevice();
+			RenderingEngine(const RenderingEngine& other) = delete;
+			RenderingEngine(RenderingEngine&& other) = delete;
 
-			void terminate();
+			void initialize(GLFWwindow* window);
+			
+
+			void registerPipeline(std::string name, GraphicsPipeline* pipeline);
 		private:
-			GLFWwindow * window;
 			vk::Instance vkInstance;
 			VkDebugReportCallbackEXT debugCallbackHandle;
 			std::unique_ptr<GraphicalDevice> device;
-			vk::SurfaceKHR surface;
 			std::unique_ptr<Swapchain> swapchain;
-			//std::unique_ptr<GraphicsPipeline> pipeline;
+			std::unique_ptr<GraphicsPipeline> pipeline;
+
+			WindowData window;
+			std::vector<PerFrameData> frames;
+			
+			
 
 #ifdef DEBUG
 			std::vector<const char*> requiredLayers = { "VK_LAYER_LUNARG_standard_validation" };
@@ -36,7 +56,9 @@ namespace VulkanCraft {
 			std::vector<const char*> requiredLayers = {};
 #endif// DEBUG
 
-			
+			void initializeVulkan();
+			void initializeGraphicalDevice();
+			void chooseBestWindowParameters();
 		};
 	}
 }
