@@ -12,12 +12,16 @@ ForwardPipeline::ForwardPipeline(const vk::Device& logicalDevice, const vk::Exte
 
 
 ForwardPipeline::~ForwardPipeline() {
+	Core::Logger::debug("Destroying forward pipeline");
+
 	this->device.destroyPipeline(this->handle);
 	this->device.destroyPipelineLayout(this->layout);
 
 	
 	this->device.destroyShaderModule(this->shaderModules.vertex);
 	this->device.destroyShaderModule(this->shaderModules.fragment);	
+
+	Core::Logger::debug("Finished destroying forward pipeline");
 }
 
 VulkanCraft::Graphics::ForwardPipeline::ForwardPipeline(ForwardPipeline && rhs): device(rhs.device), viewport(rhs.viewport) {
@@ -232,6 +236,9 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 		.setPMultisampleState(&multisamplingCreateInfo);
 
 	this->handle = this->device.createGraphicsPipeline(nullptr, pipelineCreateInfo);
+}
+
+void VulkanCraft::Graphics::ForwardPipeline::createPerFrameData() {
 }
 
 vk::RenderPass VulkanCraft::Graphics::ForwardPipeline::getRenderPass() {
