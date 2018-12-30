@@ -1,6 +1,7 @@
 #include "WireframePipeline.h"
 
-
+using namespace VulkanCraft;
+using namespace VulkanCraft::Graphics;
 
 WireframePipeline::WireframePipeline() {
 }

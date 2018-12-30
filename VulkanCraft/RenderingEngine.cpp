@@ -23,6 +23,11 @@ RenderingEngine::RenderingEngine() {
 
 
 RenderingEngine::~RenderingEngine() {
+	Core::Logger::debug("Destroying rendering engine");
+
+	delete this->pipeline;
+	delete this->swapchain;
+
 	this->vkInstance.destroySurfaceKHR(this->window.surface);
 
 #ifdef DEBUG
@@ -32,7 +37,10 @@ RenderingEngine::~RenderingEngine() {
 	}
 #endif // DEBUG
 
+	delete this->device;
 	this->vkInstance.destroy();
+
+	Core::Logger::debug("Finished destroying rendering engine");
 }
 
 void RenderingEngine::initialize(GLFWwindow * window) {
@@ -40,7 +48,7 @@ void RenderingEngine::initialize(GLFWwindow * window) {
 	this->initializeVulkan();
 	this->initializeGraphicalDevice();
 
-	this->pipeline = std::make_unique<ForwardPipeline>(this->device->logicalDevice, this->window.surfaceExtent);
+	this->pipeline = new ForwardPipeline(this->device->logicalDevice, this->window.surfaceExtent);
 
 	Core::Logger::debug("Created forward pipeline");
 }
@@ -104,7 +112,7 @@ void VulkanCraft::Graphics::RenderingEngine::initializeGraphicalDevice() {
 
 	this->chooseBestWindowParameters();
 
-	this->swapchain = std::make_unique<Swapchain>(*this->device, this->window.surface, this->window.surfaceFormat, this->window.presentMode, this->window.surfaceExtent);
+	this->swapchain = new Swapchain(*this->device, this->window.surface, this->window.surfaceFormat, this->window.presentMode, this->window.surfaceExtent);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::chooseBestWindowParameters() {
