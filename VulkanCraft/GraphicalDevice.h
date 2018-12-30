@@ -25,7 +25,7 @@ namespace VulkanCraft {
 			/**
 				Finds a graphical device that has the given validation layers, extensions required and that can also present to the given surface.
 			*/
-			static std::unique_ptr<GraphicalDevice> getGraphicalDevice(vk::Instance& instance,
+			static GraphicalDevice* getGraphicalDevice(vk::Instance& instance,
 				std::vector<const char*>& validationLayers,
 				std::vector<const char*>& requiredExtensions,
 				vk::SurfaceKHR surface);
