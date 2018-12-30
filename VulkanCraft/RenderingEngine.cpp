@@ -24,6 +24,9 @@ RenderingEngine::RenderingEngine() {
 
 RenderingEngine::~RenderingEngine() {
 	Core::Logger::debug("Destroying rendering engine");
+	this->destroyPerFrameData();
+
+	this->device->logicalDevice.destroyCommandPool(this->commandPool);
 
 	delete this->pipeline;
 	delete this->swapchain;
@@ -49,8 +52,16 @@ void RenderingEngine::initialize(GLFWwindow * window) {
 	this->initializeGraphicalDevice();
 
 	this->pipeline = new ForwardPipeline(this->device->logicalDevice, this->window.surfaceExtent);
-
 	Core::Logger::debug("Created forward pipeline");
+
+	vk::CommandPoolCreateInfo commandPoolCreateInfo;
+	commandPoolCreateInfo
+		.setQueueFamilyIndex(this->device->graphicsFamilyIndex)
+		.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
+
+	this->commandPool = this->device->logicalDevice.createCommandPool(commandPoolCreateInfo);
+	
+	this->createPerFrameData();
 }
 
 void RenderingEngine::initializeVulkan() {
@@ -161,5 +172,53 @@ void VulkanCraft::Graphics::RenderingEngine::chooseBestWindowParameters() {
 		actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
 
 		this->window.surfaceExtent = actualExtent;
+	}
+}
+
+void VulkanCraft::Graphics::RenderingEngine::createPerFrameData() {
+	this->frames.resize(this->swapchain->imageViews.size());
+
+	vk::CommandBufferAllocateInfo allocationInfo;
+	allocationInfo
+		.setCommandBufferCount(static_cast<uint32_t>(this->frames.size()))
+		.setCommandPool(this->commandPool)
+		.setLevel(vk::CommandBufferLevel::ePrimary);
+
+	std::vector<vk::CommandBuffer> commandBuffers = this->device->logicalDevice.allocateCommandBuffers(allocationInfo);
+
+	for (int i = 0; i < this->frames.size(); i++) {
+		PerFrameData& data = this->frames[i];
+		vk::ImageView attachments[] = {this->swapchain->imageViews[i].view};
+
+		vk::FramebufferCreateInfo framebufferCreateInfo;
+		framebufferCreateInfo
+			.setAttachmentCount(1)
+			.setPAttachments(attachments)
+			.setHeight(this->window.surfaceExtent.height)
+			.setWidth(this->window.surfaceExtent.width)
+			.setRenderPass(this->pipeline->getRenderPass())
+			.setLayers(1);
+
+		vk::SemaphoreCreateInfo semaphoreCreateInfo;
+		vk::FenceCreateInfo fenceCreateInfo;
+		fenceCreateInfo
+			.setFlags(vk::FenceCreateFlagBits::eSignaled);
+
+		data.framebuffer = this->device->logicalDevice.createFramebuffer(framebufferCreateInfo);
+		data.commandBuffer = commandBuffers[i];
+		data.imageAvailableSemaphore = this->device->logicalDevice.createSemaphore(semaphoreCreateInfo);
+		data.renderingDoneSemaphore = this->device->logicalDevice.createSemaphore(semaphoreCreateInfo);
+		data.inFlightFence = this->device->logicalDevice.createFence(fenceCreateInfo);
+	}
+}
+
+void VulkanCraft::Graphics::RenderingEngine::destroyPerFrameData() {
+	for (const PerFrameData& data : this->frames) {
+		this->device->logicalDevice.destroySemaphore(data.imageAvailableSemaphore);
+		this->device->logicalDevice.destroySemaphore(data.renderingDoneSemaphore);
+		this->device->logicalDevice.destroyFence(data.inFlightFence);
+
+		this->device->logicalDevice.destroyFramebuffer(data.framebuffer);
+		this->device->logicalDevice.freeCommandBuffers(this->commandPool, data.commandBuffer);
 	}
 }
