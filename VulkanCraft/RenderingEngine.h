@@ -10,12 +10,16 @@
 #include "Swapchain.h"
 #include "GraphicsPipeline.h"
 #include "ForwardPipeline.h"
+#include "Renderable.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
 		struct PerFrameData {
 			vk::Framebuffer framebuffer;
 			vk::CommandBuffer commandBuffer;
+			vk::Semaphore imageAvailableSemaphore;
+			vk::Semaphore renderingDoneSemaphore;
+			vk::Fence inFlightFence;
 		};
 
 		struct WindowData {
@@ -37,15 +41,21 @@ namespace VulkanCraft {
 			void initialize(GLFWwindow* window);
 			
 
+			void beginFrame();
+			void queueForRendering(const Renderable& renderable);
+			void endFrame();
+
 			void registerPipeline(std::string name, GraphicsPipeline* pipeline);
 		private:
 			vk::Instance vkInstance;
 			VkDebugReportCallbackEXT debugCallbackHandle;
 			GraphicalDevice* device;
+			WindowData window;
+
 			Swapchain* swapchain;
 			GraphicsPipeline* pipeline;
+			vk::CommandPool commandPool;
 
-			WindowData window;
 			std::vector<PerFrameData> frames;
 			int currentFrame = 0;
 			
@@ -59,6 +69,9 @@ namespace VulkanCraft {
 			void initializeVulkan();
 			void initializeGraphicalDevice();
 			void chooseBestWindowParameters();
+			void createPerFrameData();
+
+			void destroyPerFrameData();
 		};
 	}
 }
