@@ -4,6 +4,7 @@
 #include "ConfigurationError.h"
 #include "FileUtils.h"
 #include "Vertex.h"
+#include "Logger.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -47,8 +48,7 @@ namespace VulkanCraft {
 			void createLayout();
 			void createRenderPass();
 			void createPipeline();
-
-			// Inherited via GraphicsPipeline
+			void createPerFrameData();
 			
 		};
 	};
