@@ -41,13 +41,13 @@ namespace VulkanCraft {
 		private:
 			vk::Instance vkInstance;
 			VkDebugReportCallbackEXT debugCallbackHandle;
-			std::unique_ptr<GraphicalDevice> device;
-			std::unique_ptr<Swapchain> swapchain;
-			std::unique_ptr<GraphicsPipeline> pipeline;
+			GraphicalDevice* device;
+			Swapchain* swapchain;
+			GraphicsPipeline* pipeline;
 
 			WindowData window;
 			std::vector<PerFrameData> frames;
-			
+			int currentFrame = 0;
 			
 
 #ifdef DEBUG
