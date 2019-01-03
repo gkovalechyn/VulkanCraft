@@ -3,6 +3,7 @@
 
 
 VulkanCraft::TestRenderable::TestRenderable() {
+
 }
 
 
