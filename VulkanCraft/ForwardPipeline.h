@@ -23,6 +23,8 @@ namespace VulkanCraft {
 			// Inherited via GraphicsPipeline
 			virtual vk::Pipeline getHandle() override;
 			virtual vk::RenderPass getRenderPass() override;
+			virtual vk::Rect2D getRenderArea() override;
+
 			virtual void recreate() override;
 			virtual void cleanup() override;
 

@@ -84,6 +84,8 @@ void VulkanCraft::Graphics::ForwardPipeline::createLayout() {
 }
 
 void VulkanCraft::Graphics::ForwardPipeline::createRenderPass() {
+	
+
 	vk::AttachmentDescription colorAttachment;
 	colorAttachment
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
@@ -92,6 +94,14 @@ void VulkanCraft::Graphics::ForwardPipeline::createRenderPass() {
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
 		.setInitialLayout(vk::ImageLayout::eUndefined)
 		.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
+
+	vk::SubpassDependency colorAttachmentDependency;
+	colorAttachmentDependency
+		.setSrcSubpass(VK_SUBPASS_EXTERNAL)
+		.setDstSubpass(0)
+		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
 
 	vk::AttachmentReference colorReference;
 	colorReference
@@ -108,6 +118,8 @@ void VulkanCraft::Graphics::ForwardPipeline::createRenderPass() {
 	renderPassCreateInfo
 		.setAttachmentCount(1)
 		.setPAttachments(&colorAttachment)
+		.setDependencyCount(1)
+		.setPDependencies(&colorAttachmentDependency)
 		.setSubpassCount(1)
 		.setPSubpasses(&subpass);
 
@@ -243,6 +255,10 @@ void VulkanCraft::Graphics::ForwardPipeline::createPerFrameData() {
 
 vk::RenderPass VulkanCraft::Graphics::ForwardPipeline::getRenderPass() {
 	return this->renderPass;
+}
+
+vk::Rect2D VulkanCraft::Graphics::ForwardPipeline::getRenderArea() {
+	return vk::Rect2D({ 0, 0 }, this->viewport);
 }
 
 /*
