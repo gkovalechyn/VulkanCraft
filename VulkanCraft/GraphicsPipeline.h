@@ -10,6 +10,7 @@ namespace VulkanCraft {
 	
 			virtual vk::Pipeline getHandle() = 0;
 			virtual vk::RenderPass getRenderPass() = 0;
+			virtual vk::Rect2D getRenderArea() = 0;
 
 			virtual void recreate() = 0;
 			virtual void cleanup() = 0;
