@@ -41,11 +41,14 @@ namespace VulkanCraft {
 			void initialize(GLFWwindow* window);
 			
 
-			void beginFrame();
+			void beginFrame() noexcept;
+			void beginPass(GraphicsPipeline& pipeline) noexcept;
 			void queueForRendering(const Renderable& renderable);
-			void endFrame();
+			void endPass() noexcept;
+			void endFrame() noexcept;
 
 			void registerPipeline(std::string name, GraphicsPipeline* pipeline);
+			GraphicsPipeline* getDefaultPipeline() noexcept;
 		private:
 			vk::Instance vkInstance;
 			VkDebugReportCallbackEXT debugCallbackHandle;

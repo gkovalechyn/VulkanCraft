@@ -2,7 +2,7 @@
 
 using namespace VulkanCraft;
 using namespace VulkanCraft::Graphics;
-	
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	VkDebugReportFlagsEXT flags,
 	VkDebugReportObjectTypeEXT objType,
@@ -60,8 +60,94 @@ void RenderingEngine::initialize(GLFWwindow * window) {
 		.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 
 	this->commandPool = this->device->logicalDevice.createCommandPool(commandPoolCreateInfo);
-	
+
 	this->createPerFrameData();
+}
+
+void VulkanCraft::Graphics::RenderingEngine::beginFrame() noexcept {
+	this->currentFrame = (this->currentFrame + 1) % this->frames.size();
+	const PerFrameData& frame = this->frames[this->currentFrame];
+
+	auto fenceStatus = this->device->logicalDevice.getFenceStatus(frame.inFlightFence);
+	if (fenceStatus == vk::Result::eNotReady) {
+
+		this->device->logicalDevice.waitForFences({
+				frame.inFlightFence
+			},
+			true,
+			std::numeric_limits<uint64_t>().max());
+	}
+
+
+	this->device->logicalDevice.resetFences({ frame.inFlightFence });
+	frame.commandBuffer.reset({});
+
+	vk::CommandBufferBeginInfo beginInfo;
+	beginInfo
+		.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+	frame.commandBuffer.begin(beginInfo);
+}
+
+void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeline) noexcept {
+	const PerFrameData& frame = this->frames[this->currentFrame];
+
+	vk::RenderPassBeginInfo renderPassInfo;
+	vk::ClearValue clearValue;
+	clearValue.setColor(std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f});
+
+	//@TODO Add support for multiple render passes and multiple pipelines
+	renderPassInfo
+		.setClearValueCount(1)
+		.setPClearValues(&clearValue)
+		.setFramebuffer(frame.framebuffer)
+		.setRenderArea(this->pipeline->getRenderArea())
+		.setRenderPass(this->pipeline->getRenderPass());
+
+	frame.commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+
+	frame.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.getHandle());
+}
+
+void VulkanCraft::Graphics::RenderingEngine::queueForRendering(const Renderable & renderable) {
+	const PerFrameData& frame = this->frames[this->currentFrame];
+}
+
+void VulkanCraft::Graphics::RenderingEngine::endPass() noexcept {
+}
+
+void VulkanCraft::Graphics::RenderingEngine::endFrame() noexcept {
+	const PerFrameData& frame = this->frames[this->currentFrame];
+	const vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+
+	vk::SubmitInfo submitInfo;
+	submitInfo
+		.setCommandBufferCount(1)
+		.setPCommandBuffers(&frame.commandBuffer)
+		.setWaitSemaphoreCount(1)
+		.setPWaitSemaphores(&frame.imageAvailableSemaphore)
+		.setWaitSemaphoreCount(1)
+		.setPWaitDstStageMask(waitStages)
+		.setSignalSemaphoreCount(1)
+		.setPSignalSemaphores(&frame.renderingDoneSemaphore);
+
+	this->device->graphicsQueue.submit(submitInfo, frame.inFlightFence);
+
+	vk::PresentInfoKHR presentInfo;
+	uint32_t imageIndex = static_cast<uint32_t>(this->currentFrame);
+
+	presentInfo
+		.setWaitSemaphoreCount(1)
+		.setPWaitSemaphores(&frame.imageAvailableSemaphore)
+		.setSwapchainCount(1)
+		.setPSwapchains(&this->swapchain->handle)
+		.setPImageIndices(&imageIndex);
+
+	this->device->graphicsQueue.presentKHR(presentInfo);
+}
+
+GraphicsPipeline * VulkanCraft::Graphics::RenderingEngine::getDefaultPipeline() noexcept {
+	return this->pipeline;
 }
 
 void RenderingEngine::initializeVulkan() {
@@ -76,7 +162,7 @@ void RenderingEngine::initializeVulkan() {
 	const char** glfwExtensions;
 	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-	
+
 #ifdef DEBUG
 	extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif // DEBUG
@@ -84,11 +170,11 @@ void RenderingEngine::initializeVulkan() {
 
 	vk::InstanceCreateInfo createInfo;
 	createInfo.setPApplicationInfo(&applicationInfo)
-		.setEnabledExtensionCount((uint32_t) extensions.size())
+		.setEnabledExtensionCount((uint32_t)extensions.size())
 		.setPpEnabledExtensionNames(extensions.data());
 
 #ifdef DEBUG
-	createInfo.setEnabledLayerCount((uint32_t) requiredLayers.size())
+	createInfo.setEnabledLayerCount((uint32_t)requiredLayers.size())
 		.setPpEnabledLayerNames(requiredLayers.data());
 #endif
 
@@ -100,9 +186,9 @@ void RenderingEngine::initializeVulkan() {
 	debugCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
 	debugCreateInfo.pfnCallback = &debugCallback;
 
-	PFN_vkCreateDebugReportCallbackEXT createDebugReportCallbackFunction = (PFN_vkCreateDebugReportCallbackEXT) this->vkInstance.getProcAddr("vkCreateDebugReportCallbackEXT");
+	PFN_vkCreateDebugReportCallbackEXT createDebugReportCallbackFunction = (PFN_vkCreateDebugReportCallbackEXT)this->vkInstance.getProcAddr("vkCreateDebugReportCallbackEXT");
 	createDebugReportCallbackFunction(
-		(VkInstance) this->vkInstance,
+		(VkInstance)this->vkInstance,
 		&debugCreateInfo,
 		nullptr,
 		&debugCallbackHandle
@@ -188,7 +274,7 @@ void VulkanCraft::Graphics::RenderingEngine::createPerFrameData() {
 
 	for (int i = 0; i < this->frames.size(); i++) {
 		PerFrameData& data = this->frames[i];
-		vk::ImageView attachments[] = {this->swapchain->imageViews[i].view};
+		vk::ImageView attachments[] = { this->swapchain->imageViews[i].view };
 
 		vk::FramebufferCreateInfo framebufferCreateInfo;
 		framebufferCreateInfo
