@@ -8,4 +8,5 @@ A minecraft clone made with Vulkan in C++.
 
 ## Libraries used
 * [nlohmann/json](https://github.com/nlohmann/json)
+* [syoyo/tinyobjloader](https://github.com/syoyo/tinyobjloader)
 * [vulkan memory allocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
