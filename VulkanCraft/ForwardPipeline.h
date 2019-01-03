@@ -1,6 +1,6 @@
 #pragma once
 #include "GraphicsPipeline.h"
-#include "json.hpp"
+#include "libs/json.hpp"
 #include "ConfigurationError.h"
 #include "FileUtils.h"
 #include "Vertex.h"
