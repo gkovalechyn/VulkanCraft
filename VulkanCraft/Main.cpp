@@ -15,9 +15,16 @@ int main(int argc, char* argv[]) {
 	
 	VulkanCraft::Graphics::RenderingEngine* renderingEngine = new VulkanCraft::Graphics::RenderingEngine();
 	renderingEngine->initialize(window);
+	VulkanCraft::Graphics::GraphicsPipeline* pipeline = renderingEngine->getDefaultPipeline();
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
+
+		renderingEngine->beginFrame();	
+		renderingEngine->beginPass(*pipeline);
+
+		renderingEngine->endPass();
+		renderingEngine->endFrame();
 	}
 
 	delete renderingEngine;
