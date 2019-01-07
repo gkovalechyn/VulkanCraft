@@ -16,6 +16,7 @@ ForwardPipeline::~ForwardPipeline() {
 
 	this->device.destroyPipeline(this->handle);
 	this->device.destroyPipelineLayout(this->layout);
+	this->device.destroyDescriptorSetLayout(this->descriptorSetLayout);
 
 	
 	this->device.destroyShaderModule(this->shaderModules.vertex);
@@ -79,7 +80,26 @@ void VulkanCraft::Graphics::ForwardPipeline::createShaderModules() {
 }
 
 void VulkanCraft::Graphics::ForwardPipeline::createLayout() {
+	vk::DescriptorSetLayoutBinding descriptorBinding0;
+	descriptorBinding0
+		.setBinding(0)
+		.setDescriptorCount(1)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setStageFlags(vk::ShaderStageFlagBits::eVertex);
+
+	vk::DescriptorSetLayoutCreateInfo descriptorLayoutCreateInfo;
+	descriptorLayoutCreateInfo
+		.setBindingCount(1)
+		.setPBindings(&descriptorBinding0);
+
+	this->descriptorSetLayout = this->device.createDescriptorSetLayout(descriptorLayoutCreateInfo);
+
 	vk::PipelineLayoutCreateInfo layoutCreateInfo;
+	layoutCreateInfo
+		.setSetLayoutCount(1)
+		.setPSetLayouts(&this->descriptorSetLayout);
+		
+
 	this->layout = this->device.createPipelineLayout(layoutCreateInfo);
 }
 
@@ -151,7 +171,9 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 		.setStride(sizeof(Vertex));
 
 	vk::VertexInputAttributeDescription posAttributeDescription;
+	vk::VertexInputAttributeDescription normalAttributeDescription;
 	vk::VertexInputAttributeDescription uvAttributeDescription;
+	vk::VertexInputAttributeDescription colorAttributeDescription;
 
 	posAttributeDescription
 		.setBinding(0)
@@ -159,13 +181,25 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 		.setLocation(0)
 		.setOffset(offsetof(Vertex, position));
 
+	normalAttributeDescription
+		.setBinding(0)
+		.setFormat(vk::Format::eR32G32B32Sfloat)
+		.setLocation(1)
+		.setOffset(offsetof(Vertex, normal));
+
 	uvAttributeDescription
 		.setBinding(0)
 		.setFormat(vk::Format::eR32G32Sfloat)
-		.setLocation(1)
+		.setLocation(2)
 		.setOffset(offsetof(Vertex, uv));
 
-	vk::VertexInputAttributeDescription attributes[] = { posAttributeDescription, uvAttributeDescription };
+	colorAttributeDescription
+		.setBinding(0)
+		.setFormat(vk::Format::eR32G32B32Sfloat)
+		.setLocation(3)
+		.setOffset(offsetof(Vertex, color));
+
+	vk::VertexInputAttributeDescription attributes[] = { posAttributeDescription, normalAttributeDescription, uvAttributeDescription, colorAttributeDescription };
 	vk::VertexInputBindingDescription bindings[] = { vertexInputBindingDescription };
 
 	vertexInputStateCreateInfo

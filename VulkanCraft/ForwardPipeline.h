@@ -41,8 +41,11 @@ namespace VulkanCraft {
 				vk::ShaderModule fragment;
 			} shaderModules;
 
+			VkDescriptorSetLayout descriptorSetLayout;
 			vk::PipelineLayout layout;
+
 			vk::RenderPass renderPass;
+
 			vk::Pipeline handle;
 			std::vector<vk::Framebuffer> framebuffers;
 

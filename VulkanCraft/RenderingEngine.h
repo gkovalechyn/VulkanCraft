@@ -40,13 +40,14 @@ namespace VulkanCraft {
 
 			void initialize(GLFWwindow* window);
 			
-
 			void beginFrame() noexcept;
 			void beginPass(GraphicsPipeline& pipeline) noexcept;
 			void queueForRendering(const Renderable& renderable);
 			void endPass() noexcept;
 			void endFrame() noexcept;
 
+			GraphicalDevice* getDevice();
+	
 			void registerPipeline(std::string name, GraphicsPipeline* pipeline);
 			GraphicsPipeline* getDefaultPipeline() noexcept;
 		private:

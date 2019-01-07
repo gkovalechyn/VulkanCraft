@@ -111,6 +111,7 @@ void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeli
 
 void VulkanCraft::Graphics::RenderingEngine::queueForRendering(const Renderable & renderable) {
 	const PerFrameData& frame = this->frames[this->currentFrame];
+	frame.commandBuffer.draw()
 }
 
 void VulkanCraft::Graphics::RenderingEngine::endPass() noexcept {
@@ -144,6 +145,10 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame() noexcept {
 		.setPImageIndices(&imageIndex);
 
 	this->device->graphicsQueue.presentKHR(presentInfo);
+}
+
+GraphicalDevice * VulkanCraft::Graphics::RenderingEngine::getDevice() {
+	return this->device;
 }
 
 GraphicsPipeline * VulkanCraft::Graphics::RenderingEngine::getDefaultPipeline() noexcept {

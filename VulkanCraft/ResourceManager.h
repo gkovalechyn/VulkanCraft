@@ -13,6 +13,7 @@ namespace VulkanCraft {
 		private:
 			vk::Device device;
 			vk::Queue transferQueue;
+			vk::CommandPool commandPool;
 
 			VmaAllocator vma;
 		};

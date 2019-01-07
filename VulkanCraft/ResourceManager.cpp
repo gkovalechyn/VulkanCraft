@@ -7,6 +7,8 @@ VulkanCraft::Graphics::ResourceManager::ResourceManager(const vk::PhysicalDevice
 	allocatorCreateInfo.physicalDevice = physicalDevice;
 
 	vmaCreateAllocator(&allocatorCreateInfo, &this->vma);
+
+	vk::CommandPoolCreateInfo commandPoolCreateInfo;
 }
 
 VulkanCraft::Graphics::ResourceManager::~ResourceManager() {
@@ -14,6 +16,19 @@ VulkanCraft::Graphics::ResourceManager::~ResourceManager() {
 }
 
 VmaAllocation VulkanCraft::Graphics::ResourceManager::allocateVertexBuffer(uint64_t sizeInBytes) {
-	
+	vk::BufferCreateInfo bufferCreateInfo;
+	bufferCreateInfo
+		.setSize(sizeInBytes)
+		.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+
+	VmaAllocationCreateInfo allocationCreateInfo;
+	allocationCreateInfo.flags = VMA_MEMORY_USAGE_GPU_ONLY;
+
+	VkBuffer buffer;
+	VmaAllocation allocation;
+	VkBufferCreateInfo proxy = bufferCreateInfo;
+
+	vmaCreateBuffer(this->vma, &proxy, &allocationCreateInfo, &buffer, &allocation, nullptr);
 }
+
 
