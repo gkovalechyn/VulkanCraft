@@ -38,8 +38,8 @@ VulkanCraft::Core::Mesh::Mesh(const tinyobj::attrib_t & attributes, const tinyob
 VulkanCraft::Core::Mesh::~Mesh() {
 }
 
-int VulkanCraft::Core::Mesh::getVertexCount() {
-	return static_cast<int>(this->vertices.size());
+size_t VulkanCraft::Core::Mesh::getVertexCount() const noexcept{
+	return this->vertices.size();
 }
 
 void VulkanCraft::Core::Mesh::setVertex(int index, Graphics::Vertex & vertex) {
@@ -60,10 +60,14 @@ Graphics::Vertex* VulkanCraft::Core::Mesh::getVertex(int index) {
 	}
 }
 
-vk::Buffer VulkanCraft::Core::Mesh::getVertexBuffer() {
+vk::Buffer VulkanCraft::Core::Mesh::getVertexBuffer() const noexcept {
 	return this->vertexBuffer;
 }
 
-vk::Buffer VulkanCraft::Core::Mesh::getIndexBuffer() {
+vk::Buffer VulkanCraft::Core::Mesh::getIndexBuffer() const noexcept {
 	return this->indexBuffer;
+}
+
+size_t VulkanCraft::Core::Mesh::getIndexCount() const noexcept {
+	return this->indices.size();
 }

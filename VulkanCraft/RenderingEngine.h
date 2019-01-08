@@ -12,6 +12,7 @@
 #include "GraphicsPipeline.h"
 #include "ForwardPipeline.h"
 #include "Renderable.h"
+#include "Camera.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -43,7 +44,7 @@ namespace VulkanCraft {
 			void initialize(GLFWwindow* window);
 			
 			void beginFrame() noexcept;
-			void beginPass(GraphicsPipeline& pipeline) noexcept;
+			void beginPass(GraphicsPipeline& pipeline, Camera& camera) noexcept;
 			void queueForRendering(Renderable& renderable);
 			void endPass() noexcept;
 			void endFrame() noexcept;

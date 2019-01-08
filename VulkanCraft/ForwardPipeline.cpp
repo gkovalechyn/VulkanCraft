@@ -80,6 +80,12 @@ void VulkanCraft::Graphics::ForwardPipeline::createShaderModules() {
 }
 
 void VulkanCraft::Graphics::ForwardPipeline::createLayout() {
+	vk::PushConstantRange pushConstants;
+	pushConstants
+		.setStageFlags(vk::ShaderStageFlagBits::eVertex)
+		.setSize(sizeof(glm::mat4x4))
+		.setOffset(0);
+
 	vk::DescriptorSetLayoutBinding descriptorBinding0;
 	descriptorBinding0
 		.setBinding(0)
@@ -97,7 +103,9 @@ void VulkanCraft::Graphics::ForwardPipeline::createLayout() {
 	vk::PipelineLayoutCreateInfo layoutCreateInfo;
 	layoutCreateInfo
 		.setSetLayoutCount(1)
-		.setPSetLayouts(&this->descriptorSetLayout);
+		.setPSetLayouts(&this->descriptorSetLayout)
+		.setPushConstantRangeCount(1)
+		.setPPushConstantRanges(&pushConstants);
 		
 
 	this->layout = this->device.createPipelineLayout(layoutCreateInfo);

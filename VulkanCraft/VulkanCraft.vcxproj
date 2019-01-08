@@ -126,6 +126,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="Configuration.cpp" />
     <ClCompile Include="Constants.cpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="WireframePipeline.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Configuration.h" />
     <ClInclude Include="Constants.h" />

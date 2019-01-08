@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 
 	VulkanCraft::Graphics::RenderingEngine* renderingEngine = new VulkanCraft::Graphics::RenderingEngine();
 	renderingEngine->initialize(window);
-
+	VulkanCraft::Graphics::Camera camera;
 	VulkanCraft::Graphics::ResourceManager* resourceManager = new VulkanCraft::Graphics::ResourceManager(
 		renderingEngine->getDevice()->physicalDevice,
 		renderingEngine->getDevice()->logicalDevice,
@@ -27,13 +27,16 @@ int main(int argc, char* argv[]) {
 	);
 
 	VulkanCraft::TestRenderable testRenderable;
+
 	VulkanCraft::Graphics::GraphicsPipeline* pipeline = renderingEngine->getDefaultPipeline();
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
 		renderingEngine->beginFrame();
-		renderingEngine->beginPass(*pipeline);
+		renderingEngine->beginPass(*pipeline, camera);
+
+		renderingEngine->queueForRendering(testRenderable);
 
 		renderingEngine->endPass();
 		renderingEngine->endFrame();

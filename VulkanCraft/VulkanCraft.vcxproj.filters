@@ -105,6 +105,9 @@
     <ClCompile Include="libs\vk_mem_alloc.cpp">
       <Filter>lib</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -190,6 +193,9 @@
     </ClInclude>
     <ClInclude Include="libs\vk_mem_alloc.h">
       <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

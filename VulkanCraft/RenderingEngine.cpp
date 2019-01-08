@@ -90,7 +90,7 @@ void VulkanCraft::Graphics::RenderingEngine::beginFrame() noexcept {
 	frame.commandBuffer.begin(beginInfo);
 }
 
-void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeline) noexcept {
+void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeline, Camera& camera) noexcept {
 	const PerFrameData& frame = this->frames[this->currentFrame];
 
 	vk::RenderPassBeginInfo renderPassInfo;
@@ -106,6 +106,8 @@ void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeli
 		.setRenderPass(this->pipeline->getRenderPass());
 
 	frame.commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+
+	frame.commandBuffer.pushConstants<glm::mat4>(pipeline.getLayout(), vk::ShaderStageFlagBits::eVertex, 0, { camera.getViewProjectionMatrix() });
 
 	frame.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.getHandle());
 }

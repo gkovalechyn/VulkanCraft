@@ -6,11 +6,13 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 uv;
 layout(location = 3) in vec3 inColor;
 
-layout(set = 0, binding = 0) uniform MVP{
+layout(set = 0, binding = 0) uniform ModelData {
     mat4 model;
-    mat4 view;
-    mat4 projection;
-} mvp;
+} model;
+
+layout(push_constant) uniform CameraConstants{
+    mat4 viewAndProjection;
+} camera;
 
 layout(location = 0) out vec4 fragColor;
 
@@ -19,6 +21,6 @@ out gl_PerVertex {
 };
 
 void main() {
-    gl_Position = mvp.projection * mvp.view * mvp.model * vec4(position, 1.0);
+    gl_Position = camera.viewAndProjection * model.model * vec4(position, 1.0);
     fragColor = vec4(normal, 1.0);
 }

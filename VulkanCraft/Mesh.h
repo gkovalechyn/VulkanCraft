@@ -17,7 +17,7 @@ namespace VulkanCraft {
 			/// Returns how many vertices are in this mesh.
 			/// </summary>
 			/// <returns>The number of vertices in the mesh</returns>
-			int getVertexCount();
+			size_t getVertexCount() const noexcept;
 
 			/// <summary>
 			/// Sets the vertex at the given index to a copy of the given vertex.
@@ -39,8 +39,11 @@ namespace VulkanCraft {
 			/// <returns>A pointer to the vertex at the given index</returns>
 			Graphics::Vertex* getVertex(int index);
 
-			vk::Buffer getVertexBuffer();
-			vk::Buffer getIndexBuffer();
+			vk::Buffer getVertexBuffer() const noexcept;
+			vk::Buffer getIndexBuffer() const noexcept;
+
+			size_t getIndexCount() const noexcept;
+
 		private:
 			std::vector<Graphics::Vertex> vertices;
 			std::vector<uint32_t> indices;
