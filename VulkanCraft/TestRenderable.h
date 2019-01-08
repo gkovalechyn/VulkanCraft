@@ -9,12 +9,6 @@ namespace VulkanCraft {
 	public:
 		TestRenderable();
 		~TestRenderable();
-
-		// Inherited via Renderable
-		virtual void writeRenderCommands(const vk::CommandBuffer & commandBuffer) override;
-
-	private:
-		Core::Mesh* mesh;
 	};
 }
 

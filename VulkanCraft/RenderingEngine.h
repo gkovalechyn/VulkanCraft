@@ -1,6 +1,7 @@
 #pragma once
-#define GLFW_INCLUDE_VULKAN
 #include <string>
+#include "libs/vk_mem_alloc.h" //Here to prevent the APIENTRY macro redefinition
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
 
@@ -20,6 +21,7 @@ namespace VulkanCraft {
 			vk::Semaphore imageAvailableSemaphore;
 			vk::Semaphore renderingDoneSemaphore;
 			vk::Fence inFlightFence;
+			vk::DescriptorPool descriptorPool;
 		};
 
 		struct WindowData {
@@ -42,7 +44,7 @@ namespace VulkanCraft {
 			
 			void beginFrame() noexcept;
 			void beginPass(GraphicsPipeline& pipeline) noexcept;
-			void queueForRendering(const Renderable& renderable);
+			void queueForRendering(Renderable& renderable);
 			void endPass() noexcept;
 			void endFrame() noexcept;
 

@@ -20,5 +20,5 @@ out gl_PerVertex {
 
 void main() {
     gl_Position = mvp.projection * mvp.view * mvp.model * vec4(position, 1.0);
-    fragColor = vec4(inColor, 1.0);
+    fragColor = vec4(normal, 1.0);
 }

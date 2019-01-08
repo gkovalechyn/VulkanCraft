@@ -41,20 +41,29 @@ namespace VulkanCraft {
 				vk::ShaderModule fragment;
 			} shaderModules;
 
-			VkDescriptorSetLayout descriptorSetLayout;
+			vk::DescriptorSetLayout descriptorSetLayout;
 			vk::PipelineLayout layout;
 
 			vk::RenderPass renderPass;
 
 			vk::Pipeline handle;
 			std::vector<vk::Framebuffer> framebuffers;
+			vk::DescriptorPool descriptorPool;
 
 			void createShaderModules();
 			void createLayout();
 			void createRenderPass();
 			void createPipeline();
 			void createPerFrameData();
-			
+	
+
+			// Inherited via GraphicsPipeline
+			virtual vk::PipelineLayout getLayout() override;
+
+
+			// Inherited via GraphicsPipeline
+			virtual vk::DescriptorSet allocateDescriptorSet() override;
+
 		};
 	};
 };

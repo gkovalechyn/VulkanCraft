@@ -33,6 +33,8 @@ RenderingEngine::~RenderingEngine() {
 
 	this->vkInstance.destroySurfaceKHR(this->window.surface);
 
+	delete this->device;
+
 #ifdef DEBUG
 	auto func = (PFN_vkDestroyDebugReportCallbackEXT)this->vkInstance.getProcAddr("vkDestroyDebugReportCallbackEXT");
 	if (func != nullptr) {
@@ -40,7 +42,6 @@ RenderingEngine::~RenderingEngine() {
 	}
 #endif // DEBUG
 
-	delete this->device;
 	this->vkInstance.destroy();
 
 	Core::Logger::debug("Finished destroying rendering engine");
@@ -109,18 +110,30 @@ void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeli
 	frame.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.getHandle());
 }
 
-void VulkanCraft::Graphics::RenderingEngine::queueForRendering(const Renderable & renderable) {
+void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & renderable) {
 	const PerFrameData& frame = this->frames[this->currentFrame];
-	frame.commandBuffer.draw()
+
+	frame.commandBuffer.bindVertexBuffers(0, { renderable.getVertexBuffer() }, { renderable.getVertexOffset() });
+	frame.commandBuffer.bindIndexBuffer(renderable.getIndexBuffer(), renderable.getIndexBufferOffset(), vk::IndexType::eUint32);
+	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, { renderable.getDescriptorSet() }, {});
+
+	frame.commandBuffer.drawIndexed(renderable.getNumberOfVerticesToDraw(), 1, 0, 0, 0);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::endPass() noexcept {
+	PerFrameData& frame = this->frames[this->currentFrame];
+
+	frame.commandBuffer.endRenderPass();
 }
 
 void VulkanCraft::Graphics::RenderingEngine::endFrame() noexcept {
 	const PerFrameData& frame = this->frames[this->currentFrame];
-	const vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 
+	frame.commandBuffer.end();
+
+	const vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+	uint32_t imageIndex = this->device->logicalDevice.acquireNextImageKHR(this->swapchain->handle, std::numeric_limits<uint64_t>::max(), frame.imageAvailableSemaphore, nullptr).value;
+	
 	vk::SubmitInfo submitInfo;
 	submitInfo
 		.setCommandBufferCount(1)
@@ -135,7 +148,6 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame() noexcept {
 	this->device->graphicsQueue.submit(submitInfo, frame.inFlightFence);
 
 	vk::PresentInfoKHR presentInfo;
-	uint32_t imageIndex = static_cast<uint32_t>(this->currentFrame);
 
 	presentInfo
 		.setWaitSemaphoreCount(1)
@@ -277,6 +289,19 @@ void VulkanCraft::Graphics::RenderingEngine::createPerFrameData() {
 
 	std::vector<vk::CommandBuffer> commandBuffers = this->device->logicalDevice.allocateCommandBuffers(allocationInfo);
 
+	vk::DescriptorPoolSize poolSize;
+	poolSize
+		.setDescriptorCount(2048)
+		.setType(vk::DescriptorType::eStorageBuffer);
+
+	vk::DescriptorPoolCreateInfo createInfo;
+	createInfo
+		.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
+		.setPoolSizeCount(1)
+		.setPPoolSizes(&poolSize);
+
+
+	
 	for (int i = 0; i < this->frames.size(); i++) {
 		PerFrameData& data = this->frames[i];
 		vk::ImageView attachments[] = { this->swapchain->imageViews[i].view };
@@ -300,6 +325,8 @@ void VulkanCraft::Graphics::RenderingEngine::createPerFrameData() {
 		data.imageAvailableSemaphore = this->device->logicalDevice.createSemaphore(semaphoreCreateInfo);
 		data.renderingDoneSemaphore = this->device->logicalDevice.createSemaphore(semaphoreCreateInfo);
 		data.inFlightFence = this->device->logicalDevice.createFence(fenceCreateInfo);
+
+		data.descriptorPool = this->device->logicalDevice.createDescriptorPool(createInfo);
 	}
 }
 

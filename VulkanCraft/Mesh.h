@@ -1,13 +1,14 @@
 #pragma once
 #include <vector>
 #include "Vertex.h"
+#include "libs/tiny_obj_loader.h"
 #include "libs/vk_mem_alloc.h"
 
 namespace VulkanCraft {
 	namespace Core {
 		struct Mesh {
 			Mesh(std::vector<Graphics::Vertex> vertices);
-			Mesh(const tinyobj::attrib_t& attributes);
+			Mesh(const tinyobj::attrib_t& attributes, const tinyobj::shape_t& shape);
 			virtual ~Mesh();
 			
 			Mesh(const Mesh& other) = delete;
@@ -38,20 +39,19 @@ namespace VulkanCraft {
 			/// <returns>A pointer to the vertex at the given index</returns>
 			Graphics::Vertex* getVertex(int index);
 
+			vk::Buffer getVertexBuffer();
+			vk::Buffer getIndexBuffer();
 		private:
 			std::vector<Graphics::Vertex> vertices;
+			std::vector<uint32_t> indices;
 
-			/// <summary>
-			/// The GPU memory buffer.
-			/// </summary>
-			vk::Buffer buffer;
+			vk::Buffer vertexBuffer;
+			vk::Buffer indexBuffer;
 
-			/// <summary>
-			/// Wether the local buffer is dirty and needs to be re-sent to the GPU.
-			/// </summary>
 			bool dirty;
 
-			VmaAllocation* allocation;
+			VmaAllocation vertexAllocation;
+			VmaAllocation indexAllocation;
 		};
 	}
 }

@@ -1,7 +1,5 @@
 #include "TestRenderable.h"
 
-
-
 VulkanCraft::TestRenderable::TestRenderable() {
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
@@ -9,7 +7,7 @@ VulkanCraft::TestRenderable::TestRenderable() {
 
 	std::string warn;
 	std::string err;
-	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "Resources\Models\Cube\Export\cube.obj");
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "Resources/Models/Cube/Export/cube.obj");
 
 	if (!warn.empty()) {
 		Core::Logger::warning(warn);
@@ -21,14 +19,10 @@ VulkanCraft::TestRenderable::TestRenderable() {
 	}
 
 	Core::Logger::debug("Loaded cube obj");
+	Core::Mesh* mesh = new Core::Mesh(attrib, shapes[0]);
 }
 
 
 VulkanCraft::TestRenderable::~TestRenderable() {
 
 }
-
-void VulkanCraft::TestRenderable::writeRenderCommands(const vk::CommandBuffer & commandBuffer) {
-
-}
-

@@ -1,8 +1,10 @@
 #include <iostream>
-#include "Logger.h"
 #include "RenderingEngine.h"
 #include "ResourceManager.h"
 #include "TestRenderable.h"
+
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
 int main(int argc, char* argv[]) {
 	VulkanCraft::Core::Logger::createInstance();

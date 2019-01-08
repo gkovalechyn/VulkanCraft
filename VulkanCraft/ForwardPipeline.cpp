@@ -287,6 +287,14 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 void VulkanCraft::Graphics::ForwardPipeline::createPerFrameData() {
 }
 
+vk::PipelineLayout VulkanCraft::Graphics::ForwardPipeline::getLayout() {
+	return this->layout;
+}
+
+vk::DescriptorSet VulkanCraft::Graphics::ForwardPipeline::allocateDescriptorSet() {
+	return vk::DescriptorSet();
+}
+
 vk::RenderPass VulkanCraft::Graphics::ForwardPipeline::getRenderPass() {
 	return this->renderPass;
 }

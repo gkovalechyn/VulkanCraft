@@ -14734,7 +14734,7 @@ VkResult VmaAllocator_T::ResizeAllocation(
         }
         else
         {
-            return VK_ERROR_OUT_OF_POOL_MEMORY;
+            return VK_ERROR_OUT_OF_POOL_MEMORY_KHR;
         }
     default:
         VMA_ASSERT(0);

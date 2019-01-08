@@ -1,15 +1,19 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
-#include "libs/vk_mem_alloc.h"
+#include "Mesh.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
 		class ResourceManager {
 		public:
-			ResourceManager(const vk::PhysicalDevice& physicalDevice, const vk::Device & device, vk::Queue transferQueue);
+			ResourceManager(vk::PhysicalDevice& physicalDevice, vk::Device & device, vk::Queue transferQueue);
 			~ResourceManager();
 
-			VmaAllocation allocateVertexBuffer(uint64_t sizeInBytes);
+			VmaAllocation allocateVertexBuffer(uint64_t sizeInBytes, VkBuffer * outHandle);
+
+			VmaAllocation allocateIndexBuffer(uint64_t sizeInBytes, VkBuffer * outHandle);
+
+			Core::Mesh* loadMesh(std::string path);
 		private:
 			vk::Device device;
 			vk::Queue transferQueue;
