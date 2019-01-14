@@ -2,7 +2,7 @@
 
 uint32_t VulkanCraft::Graphics::Renderable::getNumberOfVerticesToDraw() {
 	if (this->mesh) {
-		return this->mesh->getVertexCount();
+		return static_cast<uint32_t>(this->mesh->getVertexCount());
 	} else {
 		return 0;
 	}

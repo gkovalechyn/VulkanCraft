@@ -23,7 +23,8 @@ int main(int argc, char* argv[]) {
 	VulkanCraft::Graphics::ResourceManager* resourceManager = new VulkanCraft::Graphics::ResourceManager(
 		renderingEngine->getDevice()->physicalDevice,
 		renderingEngine->getDevice()->logicalDevice,
-		renderingEngine->getDevice()->graphicsQueue
+		renderingEngine->getDevice()->graphicsQueue,
+		renderingEngine->getDevice()->graphicsFamilyIndex
 	);
 
 	VulkanCraft::TestRenderable testRenderable;

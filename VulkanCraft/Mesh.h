@@ -38,9 +38,14 @@ namespace VulkanCraft {
 			/// <param name="index">The index.</param>
 			/// <returns>A pointer to the vertex at the given index</returns>
 			Graphics::Vertex* getVertex(int index);
+			void setVertexBuffer(VmaAllocation allocation, vk::Buffer& buffer) noexcept;
+			void setIndexBuffer(VmaAllocation allocation, vk::Buffer& buffer) noexcept;
 
 			vk::Buffer getVertexBuffer() const noexcept;
+			VmaAllocation getVertexBufferAllocation() const noexcept;
+			
 			vk::Buffer getIndexBuffer() const noexcept;
+			VmaAllocation getIndexBufferAllocation() const noexcept;
 
 			size_t getIndexCount() const noexcept;
 

@@ -20,6 +20,8 @@ VulkanCraft::TestRenderable::TestRenderable() {
 
 	Core::Logger::debug("Loaded cube obj");
 	this->setMesh(new Core::Mesh(attrib, shapes[0]));
+	
+	Core::Logger::debug("Cube mesh created");
 }
 
 

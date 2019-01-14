@@ -45,11 +45,13 @@ size_t VulkanCraft::Core::Mesh::getVertexCount() const noexcept{
 void VulkanCraft::Core::Mesh::setVertex(int index, Graphics::Vertex & vertex) {
 	if (index >= 0 && index < this->vertices.size()) {
 		this->vertices[index] = vertex;
+		this->dirty = true;
 	}
 }
 
 void VulkanCraft::Core::Mesh::addVertex(Graphics::Vertex & vertex) {
 	this->vertices.push_back(vertex);
+	this->dirty = true;
 }
 
 Graphics::Vertex* VulkanCraft::Core::Mesh::getVertex(int index) {
@@ -58,6 +60,16 @@ Graphics::Vertex* VulkanCraft::Core::Mesh::getVertex(int index) {
 	}else{
 		throw std::runtime_error("Invalid vertex index, index  < 0 or index > vertices.size()");
 	}
+}
+
+void VulkanCraft::Core::Mesh::setVertexBuffer(VmaAllocation allocation, vk::Buffer & buffer) noexcept {
+	this->vertexAllocation = allocation;
+	this->vertexBuffer = buffer;
+}
+
+void VulkanCraft::Core::Mesh::setIndexBuffer(VmaAllocation allocation, vk::Buffer & buffer) noexcept {
+	this->indexAllocation = allocation;
+	this->indexBuffer = buffer;
 }
 
 vk::Buffer VulkanCraft::Core::Mesh::getVertexBuffer() const noexcept {
