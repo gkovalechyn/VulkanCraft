@@ -20,8 +20,12 @@ namespace VulkanCraft {
 			uint64_t size = 0;
 
 			bool freeFromBuffer = false;
-			std::promise<void> promise = {};
-		
+			std::unique_ptr<std::promise<void>> promise;
+
+		public:
+			PendingMemoryTransfer() : 
+				promise{ std::make_unique<std::promise<void>>() }
+			{};
 		};
 
 		class ResourceManager {

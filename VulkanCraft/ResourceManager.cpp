@@ -77,6 +77,7 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 		.setLevel(vk::CommandBufferLevel::ePrimary);
 
 	PendingMemoryTransfer transfer = {};
+	transfer.promise = std::make_unique<std::promise<void>>();
 	transfer.freeFromBuffer = true;
 	transfer.from = stagingBuffer;
 	transfer.fromAllocation = allocation;
@@ -116,7 +117,7 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 		this->pendingTransfers.push_back(transfer);
 	}
 
-	return transfer.promise.get_future();
+	return transfer.promise->get_future();
 }
 
 Core::Mesh* VulkanCraft::Graphics::ResourceManager::createMesh(const tinyobj::attrib_t & attributes, const tinyobj::shape_t & shape) {
