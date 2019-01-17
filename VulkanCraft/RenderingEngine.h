@@ -13,6 +13,7 @@
 #include "ForwardPipeline.h"
 #include "Renderable.h"
 #include "Camera.h"
+#include "ResourceManager.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -43,11 +44,11 @@ namespace VulkanCraft {
 
 			void initialize(GLFWwindow* window);
 			
-			void beginFrame() noexcept;
-			void beginPass(GraphicsPipeline& pipeline, Camera& camera) noexcept;
+			void beginFrame();
+			void beginPass(GraphicsPipeline& pipeline, Camera& camera);
 			void queueForRendering(Renderable& renderable);
-			void endPass() noexcept;
-			void endFrame() noexcept;
+			void endPass();
+			void endFrame(const std::vector<PendingMemoryTransfer>& pendingTransfers);
 
 			GraphicalDevice* getDevice();
 	

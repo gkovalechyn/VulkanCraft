@@ -17,10 +17,10 @@ int main(int argc, char* argv[]) {
 	window = glfwCreateWindow(800, 600, "Test", nullptr, nullptr);
 
 
-	VulkanCraft::Graphics::RenderingEngine* renderingEngine = new VulkanCraft::Graphics::RenderingEngine();
+	auto renderingEngine = std::make_unique<VulkanCraft::Graphics::RenderingEngine>();
 	renderingEngine->initialize(window);
 	VulkanCraft::Graphics::Camera camera;
-	VulkanCraft::Graphics::ResourceManager* resourceManager = new VulkanCraft::Graphics::ResourceManager(
+	auto resourceManager = std::make_unique<VulkanCraft::Graphics::ResourceManager>(
 		renderingEngine->getDevice()->physicalDevice,
 		renderingEngine->getDevice()->logicalDevice,
 		renderingEngine->getDevice()->graphicsQueue,
@@ -40,10 +40,11 @@ int main(int argc, char* argv[]) {
 		renderingEngine->queueForRendering(testRenderable);
 
 		renderingEngine->endPass();
-		renderingEngine->endFrame();
+		renderingEngine->endFrame(resourceManager->);
 	}
 
-	delete renderingEngine;
+	resourceManager.reset();
+	renderingEngine.reset();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 }

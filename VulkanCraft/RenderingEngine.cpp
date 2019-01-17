@@ -65,7 +65,7 @@ void RenderingEngine::initialize(GLFWwindow * window) {
 	this->createPerFrameData();
 }
 
-void VulkanCraft::Graphics::RenderingEngine::beginFrame() noexcept {
+void VulkanCraft::Graphics::RenderingEngine::beginFrame() {
 	this->currentFrame = (this->currentFrame + 1) % this->frames.size();
 	const PerFrameData& frame = this->frames[this->currentFrame];
 
@@ -90,7 +90,7 @@ void VulkanCraft::Graphics::RenderingEngine::beginFrame() noexcept {
 	frame.commandBuffer.begin(beginInfo);
 }
 
-void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeline, Camera& camera) noexcept {
+void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeline, Camera& camera) {
 	const PerFrameData& frame = this->frames[this->currentFrame];
 
 	vk::RenderPassBeginInfo renderPassInfo;
@@ -122,28 +122,38 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 	frame.commandBuffer.drawIndexed(renderable.getNumberOfVerticesToDraw(), 1, 0, 0, 0);
 }
 
-void VulkanCraft::Graphics::RenderingEngine::endPass() noexcept {
+void VulkanCraft::Graphics::RenderingEngine::endPass() {
 	PerFrameData& frame = this->frames[this->currentFrame];
 
 	frame.commandBuffer.endRenderPass();
 }
 
-void VulkanCraft::Graphics::RenderingEngine::endFrame() noexcept {
+void VulkanCraft::Graphics::RenderingEngine::endFrame(const std::vector<PendingMemoryTransfer>& pendingTransfers) {
 	const PerFrameData& frame = this->frames[this->currentFrame];
 
 	frame.commandBuffer.end();
+	
+	//One for each transfer that needs to finish and 1 more for the image available semaphore
+	std::vector<vk::PipelineStageFlags> waitStages(pendingTransfers.size() + 1);
+	std::vector<vk::Semaphore> waitSemaphores(pendingTransfers.size() + 1);
 
-	const vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 	uint32_t imageIndex = this->device->logicalDevice.acquireNextImageKHR(this->swapchain->handle, std::numeric_limits<uint64_t>::max(), frame.imageAvailableSemaphore, nullptr).value;
 	
+	for (const auto& pendingTransfer : pendingTransfers) {
+		waitSemaphores.push_back(pendingTransfer.doneSemaphore);
+		waitStages.push_back(vk::PipelineStageFlagBits::eVertexShader);
+	}
+
+	waitSemaphores.push_back(frame.imageAvailableSemaphore);
+	waitStages.push_back(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+
 	vk::SubmitInfo submitInfo;
 	submitInfo
 		.setCommandBufferCount(1)
 		.setPCommandBuffers(&frame.commandBuffer)
-		.setWaitSemaphoreCount(1)
-		.setPWaitSemaphores(&frame.imageAvailableSemaphore)
-		.setWaitSemaphoreCount(1)
-		.setPWaitDstStageMask(waitStages)
+		.setWaitSemaphoreCount(static_cast<uint32_t>(waitSemaphores.size()))
+		.setPWaitSemaphores(waitSemaphores.data())
+		.setPWaitDstStageMask(waitStages.data())
 		.setSignalSemaphoreCount(1)
 		.setPSignalSemaphores(&frame.renderingDoneSemaphore);
 
