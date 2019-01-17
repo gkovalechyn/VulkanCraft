@@ -7,7 +7,7 @@ namespace VulkanCraft {
 	namespace Graphics {
 		struct PendingMemoryTransfer {
 			vk::Fence doneFence;
-			vk::Fence doneSemaphore;
+			vk::Semaphore doneSemaphore;
 			vk::CommandBuffer commandBuffer;
 
 			VmaAllocation fromAllocation;
