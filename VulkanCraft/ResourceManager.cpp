@@ -1,6 +1,7 @@
 #include "ResourceManager.h"
 
 using namespace VulkanCraft;
+using namespace VulkanCraft::Graphics;
 
 VulkanCraft::Graphics::ResourceManager::ResourceManager(vk::PhysicalDevice& physicalDevice, vk::Device & device, vk::Queue transferQueue, uint32_t queueFamilyIndex) : device(device), transferQueue(transferQueue){
 	VmaAllocatorCreateInfo allocatorCreateInfo = {};
@@ -89,7 +90,7 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 	transfer.to = to;
 	transfer.toOffset = offset;
 
-	transfer.doneSemaphore = this->device.createSemaphore({});
+	transfer.doneFence = this->device.createFence({});
 	transfer.commandBuffer = this->device.allocateCommandBuffers(commandBufferAllocateInfo)[0];
 
 	vk::CommandBufferBeginInfo beginInfo;
@@ -102,18 +103,16 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 		.setSize(size)
 		.setSrcOffset(0)
 		.setDstOffset(offset);
+
 	transfer.commandBuffer.copyBuffer(transfer.from, transfer.to, { copyRegion });
 	transfer.commandBuffer.end();
 
 	vk::SubmitInfo submitInfo;
 	submitInfo
 		.setCommandBufferCount(1)
-		.setPCommandBuffers(&transfer.commandBuffer)
-		.setSignalSemaphoreCount(1)
-		.setPSignalSemaphores(&transfer.doneSemaphore);
+		.setPCommandBuffers(&transfer.commandBuffer);
 
-
-	this->transferQueue.submit(submitInfo, nullptr);
+	this->transferQueue.submit(submitInfo, transfer.doneFence);
 	auto future = transfer.promise.get_future();
 
 	if (important) {
@@ -125,8 +124,8 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 	return future;
 }
 
-Core::Mesh* VulkanCraft::Graphics::ResourceManager::createMesh(const tinyobj::attrib_t & attributes, const tinyobj::shape_t & shape) {
-	Core::Mesh* mesh = new Core::Mesh(attributes, shape);
+std::unique_ptr<Core::Mesh> VulkanCraft::Graphics::ResourceManager::createMesh(const tinyobj::attrib_t & attributes, const tinyobj::shape_t & shape) {
+	auto mesh = std::make_unique<Core::Mesh>(attributes, shape);
 	VkBuffer vertexBufferHandle;
 	VkBuffer indexBufferHandle;
 
@@ -140,6 +139,21 @@ Core::Mesh* VulkanCraft::Graphics::ResourceManager::createMesh(const tinyobj::at
 	mesh->setIndexBuffer(indexAllocation, indexBuffer);
 	
 	return mesh;
+}
+
+const std::vector<PendingMemoryTransfer>& VulkanCraft::Graphics::ResourceManager::getImportantPendingTransfers() const noexcept {
+	return this->pendingImportantTransfers;
+}
+
+const std::vector<PendingMemoryTransfer>& VulkanCraft::Graphics::ResourceManager::getPendingTransfers() const noexcept {
+	return this->pendingTransfers;
+}
+
+void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
+	for (auto it = this->pendingImportantTransfers.rbegin(); it != this->pendingImportantTransfers.rend(); it++) {
+		
+	}
+
 }
 
 /*

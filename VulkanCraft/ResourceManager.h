@@ -6,7 +6,7 @@
 namespace VulkanCraft {
 	namespace Graphics {
 		struct PendingMemoryTransfer {
-			vk::Semaphore doneSemaphore;
+			vk::Fence doneFence;
 			vk::CommandBuffer commandBuffer;
 
 			VmaAllocation fromAllocation;
@@ -41,7 +41,7 @@ namespace VulkanCraft {
 			void unmapAllocation(const VmaAllocation& allocation);
 
 			std::future<void> pushDataToGPUBuffer(const void* data, const uint64_t size, const vk::Buffer& to, const uint64_t offset = 0, const bool important = false);
-			Core::Mesh* createMesh(const tinyobj::attrib_t & attributes, const tinyobj::shape_t& shape);
+			std::unique_ptr<Core::Mesh> createMesh(const tinyobj::attrib_t & attributes, const tinyobj::shape_t& shape);
 
 			const std::vector<PendingMemoryTransfer>& getImportantPendingTransfers() const noexcept;
 			const std::vector<PendingMemoryTransfer>& getPendingTransfers() const noexcept;
