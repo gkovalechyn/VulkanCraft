@@ -91,6 +91,7 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 	transfer.toOffset = offset;
 
 	transfer.doneFence = this->device.createFence({});
+	transfer.doneSemaphore = this->device.createSemaphore({});
 	transfer.commandBuffer = this->device.allocateCommandBuffers(commandBufferAllocateInfo)[0];
 
 	vk::CommandBufferBeginInfo beginInfo;
@@ -110,7 +111,9 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 	vk::SubmitInfo submitInfo;
 	submitInfo
 		.setCommandBufferCount(1)
-		.setPCommandBuffers(&transfer.commandBuffer);
+		.setPCommandBuffers(&transfer.commandBuffer)
+		.setSignalSemaphoreCount(1)
+		.setPWaitSemaphores(&transfer.doneSemaphore);
 
 	this->transferQueue.submit(submitInfo, transfer.doneFence);
 	auto future = transfer.promise.get_future();
