@@ -115,9 +115,54 @@ void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeli
 void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & renderable) {
 	const PerFrameData& frame = this->frames[this->currentFrame];
 
+	if (renderable.areDescriptorSetsDirty()) {
+		std::vector<vk::WriteDescriptorSet> writes(renderable.getDescriptorSets().size());
+
+		for (const auto& descriptorData : renderable.getDescriptorSets()) {
+			vk::WriteDescriptorSet writeDescriptorSet = {};
+
+			writeDescriptorSet
+				.setDescriptorCount(1)
+				.setDescriptorType(descriptorData.type)
+				.setDstBinding(descriptorData.binding)
+				.setDstSet(descriptorData.descriptorSet);
+
+			switch (descriptorData.type) {
+				case vk::DescriptorType::eUniformBuffer:
+				case vk::DescriptorType::eStorageBuffer:
+				case vk::DescriptorType::eStorageBufferDynamic:
+					writeDescriptorSet.setPBufferInfo(&descriptorData.bufferInfo);
+					break;
+
+				case vk::DescriptorType::eSampler:
+				case vk::DescriptorType::eStorageImage:
+					writeDescriptorSet.setPImageInfo(&descriptorData.imageInfo);
+					break;
+
+				case vk::DescriptorType::eStorageTexelBuffer:
+					writeDescriptorSet.setPTexelBufferView(&descriptorData.texelView);
+					break;
+
+				default:
+					throw std::runtime_error("Unkown descriptor type");
+			}
+
+			writes.push_back(writeDescriptorSet);
+		}
+
+
+		this->device->logicalDevice.updateDescriptorSets(writes, {});
+	}
+
+	std::vector<vk::DescriptorSet> descriptorSets(renderable.getDescriptorSets().size());
+
+	for (const auto& descriptorSetWithData : renderable.getDescriptorSets()) {
+		descriptorSets.push_back(descriptorSetWithData.descriptorSet);
+	}
+
 	frame.commandBuffer.bindVertexBuffers(0, { renderable.getVertexBuffer() }, { renderable.getVertexOffset() });
 	frame.commandBuffer.bindIndexBuffer(renderable.getIndexBuffer(), renderable.getIndexBufferOffset(), vk::IndexType::eUint32);
-	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, { renderable.getDescriptorSet() }, {});
+	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, descriptorSets, {});
 
 	frame.commandBuffer.drawIndexed(renderable.getNumberOfVerticesToDraw(), 1, 0, 0, 0);
 }
@@ -132,13 +177,13 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame(const std::vector<PendingM
 	const PerFrameData& frame = this->frames[this->currentFrame];
 
 	frame.commandBuffer.end();
-	
+
 	//One for each transfer that needs to finish and 1 more for the image available semaphore
 	std::vector<vk::PipelineStageFlags> waitStages(pendingTransfers.size() + 1);
 	std::vector<vk::Semaphore> waitSemaphores(pendingTransfers.size() + 1);
 
 	uint32_t imageIndex = this->device->logicalDevice.acquireNextImageKHR(this->swapchain->handle, std::numeric_limits<uint64_t>::max(), frame.imageAvailableSemaphore, nullptr).value;
-	
+
 	for (const auto& pendingTransfer : pendingTransfers) {
 		waitSemaphores.push_back(pendingTransfer.doneSemaphore);
 		waitStages.push_back(vk::PipelineStageFlagBits::eVertexShader);
@@ -313,7 +358,7 @@ void VulkanCraft::Graphics::RenderingEngine::createPerFrameData() {
 		.setPPoolSizes(&poolSize);
 
 
-	
+
 	for (int i = 0; i < this->frames.size(); i++) {
 		PerFrameData& data = this->frames[i];
 		vk::ImageView attachments[] = { this->swapchain->imageViews[i].view };

@@ -16,11 +16,7 @@ uint32_t VulkanCraft::Graphics::Renderable::getVertexOffset() {
 	return 0;
 }
 
-vk::DescriptorSet VulkanCraft::Graphics::Renderable::getDescriptorSet() {
-	return this->descriptorSet;
-}
-
-bool VulkanCraft::Graphics::Renderable::isDescriptorSetDirty() {
+bool VulkanCraft::Graphics::Renderable::areDescriptorSetsDirty() {
 	return this->descriptorSetIsDirty;
 }
 

@@ -4,6 +4,19 @@
 
 namespace VulkanCraft {
 	namespace Graphics {
+		
+		struct DescriptorSetWithData {
+			vk::DescriptorSet descriptorSet;
+			vk::DescriptorType type;
+			uint32_t binding;
+
+			union {
+				vk::DescriptorBufferInfo bufferInfo;
+				vk::DescriptorImageInfo imageInfo;
+				vk::BufferView texelView;
+			};
+		};
+
 		class Renderable {
 		public:
 			virtual ~Renderable() {};
@@ -26,8 +39,9 @@ namespace VulkanCraft {
 			/// <returns>The offset of this object's vertices in the vertex buffer</returns>
 			virtual uint32_t getVertexOffset();
 
-			virtual vk::DescriptorSet getDescriptorSet();
-			virtual bool isDescriptorSetDirty();
+			std::vector<DescriptorSetWithData> getDescriptorSets();
+			void setDescriptorSets(std::vector <DescriptorSetWithData> descriptorSets);
+			bool areDescriptorSetsDirty();
 
 			/// <summary>
 			/// Gets the index buffer.
@@ -43,6 +57,8 @@ namespace VulkanCraft {
 			virtual vk::Buffer getVertexBuffer();
 
 			void setMesh(Core::Mesh* mesh);
+
+			void setShaderData(uint32_t set, uint32_t binding, void* data, size_t size);
 		private:
 			Core::Mesh* mesh;
 			vk::DescriptorSet descriptorSet;
