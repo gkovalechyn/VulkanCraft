@@ -150,8 +150,18 @@ const std::vector<PendingMemoryTransfer>& VulkanCraft::Graphics::ResourceManager
 }
 
 void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
-	for (auto it = this->pendingImportantTransfers.rbegin(); it != this->pendingImportantTransfers.rend(); it++) {
-		
+	std::vector<PendingMemoryTransfer> transferVectors[] = { this->pendingImportantTransfers, this->pendingTransfers };
+
+	for (auto& tranferVector : transferVectors) {
+		for (auto it = tranferVector.rbegin(); it != tranferVector.rend(); it++) {
+			auto& pendingTransfer = *it;
+			auto fenceStatus = this->device.getFenceStatus(pendingTransfer.doneFence);
+
+			if (fenceStatus == vk::Result::eSuccess) {
+				pendingTransfer.promise.set_value();
+				tranferVector.erase(it.base());
+			}
+		}
 	}
 
 }
