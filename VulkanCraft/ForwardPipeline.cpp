@@ -296,7 +296,7 @@ void VulkanCraft::Graphics::ForwardPipeline::createPerFrameData() {
 }
 
 DescriptorSetData VulkanCraft::Graphics::ForwardPipeline::allocateDescriptorSet(uint32_t set, uint32_t index) {
-	//TODO allocate only 1 descriptor set
+	return DescriptorSetData();
 }
 
 vk::PipelineLayout VulkanCraft::Graphics::ForwardPipeline::getLayout() {

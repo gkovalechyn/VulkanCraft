@@ -134,6 +134,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BufferMemoryManager.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="Configuration.cpp" />
@@ -160,6 +161,7 @@
     <ClCompile Include="WireframePipeline.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BufferMemoryManager.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Configuration.h" />
@@ -168,6 +170,7 @@
     <ClInclude Include="ForwardPipeline.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GlobalDefines.h" />
+    <ClInclude Include="GPUAllocation.h" />
     <ClInclude Include="GraphicalDevice.h" />
     <ClInclude Include="GraphicsDefs.h" />
     <ClInclude Include="GraphicsPipeline.h" />

@@ -2,7 +2,7 @@
 #include <vector>
 #include "Vertex.h"
 #include "libs/tiny_obj_loader.h"
-#include "libs/vk_mem_alloc.h"
+#include "GPUAllocation.h"
 #include "Logger.h"
 
 namespace VulkanCraft {
@@ -43,14 +43,11 @@ namespace VulkanCraft {
 			/// <returns>A pointer to the vertex at the given index</returns>
 			Graphics::Vertex* getVertex(int index);
 
-			void setVertexBuffer(VmaAllocation allocation, vk::Buffer& buffer) noexcept;
-			void setIndexBuffer(VmaAllocation allocation, vk::Buffer& buffer) noexcept;
+			void setVertexBuffer(GPUAllocation vertexAllocation) noexcept;
+			void setIndexBuffer(GPUAllocation indexAllocation) noexcept;
 
-			vk::Buffer getVertexBuffer() const noexcept;
-			VmaAllocation getVertexBufferAllocation() const noexcept;
-			
-			vk::Buffer getIndexBuffer() const noexcept;
-			VmaAllocation getIndexBufferAllocation() const noexcept;
+			GPUAllocation getVertexBuffer() const noexcept;
+			GPUAllocation getIndexBuffer() const noexcept;
 
 			size_t getIndexCount() const noexcept;
 
@@ -61,13 +58,10 @@ namespace VulkanCraft {
 			std::vector<Graphics::Vertex> vertices;
 			std::vector<uint32_t> indices;
 
-			vk::Buffer vertexBuffer;
-			vk::Buffer indexBuffer;
+			GPUAllocation vertexBuffer;
+			GPUAllocation indexBuffer;
 
 			bool dirty;
-
-			VmaAllocation vertexAllocation;
-			VmaAllocation indexAllocation;
 		};
 	}
 }

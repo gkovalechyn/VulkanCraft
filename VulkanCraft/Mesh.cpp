@@ -90,31 +90,22 @@ Graphics::Vertex* VulkanCraft::Graphics::Mesh::getVertex(int index) {
 	}
 }
 
-void VulkanCraft::Graphics::Mesh::setVertexBuffer(VmaAllocation allocation, vk::Buffer & buffer) noexcept {
-	this->vertexAllocation = allocation;
-	this->vertexBuffer = buffer;
+void VulkanCraft::Graphics::Mesh::setVertexBuffer(GPUAllocation vertexAllocation) noexcept {
+	this->vertexBuffer = vertexAllocation;
 }
 
-void VulkanCraft::Graphics::Mesh::setIndexBuffer(VmaAllocation allocation, vk::Buffer & buffer) noexcept {
-	this->indexAllocation = allocation;
-	this->indexBuffer = buffer;
+void VulkanCraft::Graphics::Mesh::setIndexBuffer(GPUAllocation indexAllocation) noexcept {
+	this->indexBuffer = indexAllocation;
 }
 
-vk::Buffer VulkanCraft::Graphics::Mesh::getVertexBuffer() const noexcept {
+GPUAllocation VulkanCraft::Graphics::Mesh::getVertexBuffer() const noexcept {
 	return this->vertexBuffer;
 }
 
-VmaAllocation VulkanCraft::Graphics::Mesh::getVertexBufferAllocation() const noexcept {
-	return this->vertexAllocation;
-}
-
-vk::Buffer VulkanCraft::Graphics::Mesh::getIndexBuffer() const noexcept {
+GPUAllocation VulkanCraft::Graphics::Mesh::getIndexBuffer() const noexcept {
 	return this->indexBuffer;
 }
 
-VmaAllocation VulkanCraft::Graphics::Mesh::getIndexBufferAllocation() const noexcept {
-	return this->indexAllocation;
-}
 
 size_t VulkanCraft::Graphics::Mesh::getIndexCount() const noexcept {
 	return this->indices.size();

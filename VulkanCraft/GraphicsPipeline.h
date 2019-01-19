@@ -4,23 +4,14 @@
 namespace VulkanCraft {
 	namespace Graphics {
 		struct DescriptorSetData {
+		public:
 			vk::DescriptorSet descriptorSet;
 			vk::DescriptorType type;
 			uint32_t set;
 			uint32_t binding;
+			GPUAllocation data;
 
 			bool dirty;
-
-			union Info {
-				vk::DescriptorBufferInfo bufferInfo;
-				vk::DescriptorImageInfo imageInfo;
-				vk::BufferView texelView;
-			} info;
-
-			union Data {
-				vk::Buffer buffer;
-				vk::ImageView image;
-			} data;
 		};
 
 		class GraphicsPipeline {
@@ -38,7 +29,6 @@ namespace VulkanCraft {
 
 			virtual void recreate() = 0;
 			virtual void cleanup() = 0;
-
 		};
 	}
 }

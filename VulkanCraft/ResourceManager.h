@@ -2,6 +2,7 @@
 #include <future>
 #include <vulkan/vulkan.hpp>
 #include "Mesh.h"
+#include "BufferMemoryManager.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -41,7 +42,7 @@ namespace VulkanCraft {
 			void mapAllocation(const VmaAllocation& allocation, void** ptr);
 			void unmapAllocation(const VmaAllocation& allocation);
 
-			std::future<void> pushDataToGPUBuffer(const void* data, const uint64_t size, const vk::Buffer& to, const uint64_t offset = 0, const bool important = false);
+			std::future<void> pushDataToGPUBuffer(const void* data, const uint64_t size, const GPUAllocation& allocation, const bool important = false);
 			void uploadMeshToGPU(Mesh& mesh);
 			void refreshMeshGPUData(Mesh& mesh);
 
@@ -56,6 +57,13 @@ namespace VulkanCraft {
 
 			std::vector<PendingMemoryTransfer> pendingTransfers;
 			std::vector<PendingMemoryTransfer> pendingImportantTransfers;
+
+			std::unique_ptr<BufferMemoryManager> vertexBufferManager;
+			std::unique_ptr<BufferMemoryManager> indexBufferManager;
+			std::unique_ptr<BufferMemoryManager> stagingBufferManager;
+			std::unique_ptr<BufferMemoryManager> uboBufferManager;
+
+			void* mappedStagingBuffer;
 
 			VmaAllocator vma;
 		};

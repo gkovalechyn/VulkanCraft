@@ -16,6 +16,23 @@ VulkanCraft::Graphics::ResourceManager::ResourceManager(vk::PhysicalDevice& phys
 
 	this->commandPool = device.createCommandPool(createInfo);
 
+	VkBuffer vertexBufferHandle;
+	auto vertexAllocation = this->allocateVertexBuffer(64 * 1024 * 1024, &vertexBufferHandle);
+	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(vertexBufferHandle), vertexAllocation, 64 * 1024 * 1024);
+
+	VkBuffer indexBufferHandle;
+	auto indexAllocation = this->allocateVertexBuffer(64 * 1024 * 1024, &indexBufferHandle);
+	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(indexBufferHandle), indexAllocation, 64 * 1024 * 1024);
+
+	VkBuffer uboBufferHandle;
+	auto uboAllocation = this->allocateBuffer(128 * 1024 * 1024, &uboBufferHandle, vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY);
+	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(uboBufferHandle), uboAllocation, 128 * 1024 * 1024);
+
+	VkBuffer stagingBufferHandle;
+	auto stagingAllocation = this->allocateStagingBuffer(64 * 1024 * 1024, &stagingBufferHandle);
+	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(stagingBufferHandle), stagingAllocation, 64 * 1024 * 1024);
+
+	this->mapAllocation(this->stagingBufferManager->getBufferAllocation(), &this->mappedStagingBuffer);
 }
 
 VulkanCraft::Graphics::ResourceManager::~ResourceManager() {
@@ -66,15 +83,11 @@ void VulkanCraft::Graphics::ResourceManager::unmapAllocation(const VmaAllocation
 	vmaUnmapMemory(this->vma, allocation);
 }
 
-std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(const void * data, const uint64_t size, const vk::Buffer & to, const uint64_t offset, const bool important) {
-	VkBuffer stagingBufferHandle;
-	VmaAllocation allocation = this->allocateStagingBuffer(size, &stagingBufferHandle);
-	vk::Buffer stagingBuffer(stagingBufferHandle);
-	void* stagingData;
-
-	this->mapAllocation(allocation, &stagingData);
-	memcpy(stagingData, data, size);
-	this->unmapAllocation(allocation);
+std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(const void * data, const uint64_t size, const GPUAllocation& to, const bool important) {
+	GPUAllocation stagingAllocation = this->stagingBufferManager->allocateMemory(size, 1);
+	VmaAllocation vmaAllocation = this->stagingBufferManager->getBufferAllocation();
+	
+	memcpy(((uint8_t*) this->mappedStagingBuffer) + stagingAllocation.offset, data, size);
 
 	vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
 	commandBufferAllocateInfo
@@ -83,12 +96,13 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 		.setLevel(vk::CommandBufferLevel::ePrimary);
 
 	PendingMemoryTransfer transfer = {};
-	transfer.freeFromBuffer = true;
-	transfer.from = stagingBuffer;
-	transfer.fromAllocation = allocation;
+	transfer.freeFromBuffer = false;
+	transfer.from = this->stagingBufferManager->getManagedBuffer();
+	transfer.fromAllocation = vmaAllocation;
+	transfer.fromOffset = stagingAllocation.offset;
 
-	transfer.to = to;
-	transfer.toOffset = offset;
+	transfer.to = to.buffer;
+	transfer.toOffset = to.offset;
 
 	transfer.doneFence = this->device.createFence({});
 	transfer.doneSemaphore = this->device.createSemaphore({});
@@ -102,8 +116,8 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 	vk::BufferCopy copyRegion;
 	copyRegion
 		.setSize(size)
-		.setSrcOffset(0)
-		.setDstOffset(offset);
+		.setSrcOffset(stagingAllocation.offset)
+		.setDstOffset(to.offset);
 
 	transfer.commandBuffer.copyBuffer(transfer.from, transfer.to, { copyRegion });
 	transfer.commandBuffer.end();
@@ -128,25 +142,20 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 }
 
 void VulkanCraft::Graphics::ResourceManager::uploadMeshToGPU(Mesh & mesh) {
-	VkBuffer vertexBufferHandle;
-	VkBuffer indexBufferHandle;
 
-	VmaAllocation vertexAllocation = this->allocateVertexBuffer(mesh.getVertexCount() * sizeof(Vertex), &vertexBufferHandle);
-	VmaAllocation indexAllocation = this->allocateIndexBuffer(mesh.getIndexCount() * sizeof(uint32_t), &indexBufferHandle);
+	GPUAllocation vertexAllocation = this->vertexBufferManager->allocateMemory(sizeof(Vertex) * mesh.getVertexCount(), 16);
+	GPUAllocation indexAllocation = this->indexBufferManager->allocateMemory(sizeof(uint32_t) * mesh.getVertexCount(), sizeof(uint32_t));
 
-	vk::Buffer vertexBuffer(vertexBufferHandle);
-	vk::Buffer indexBuffer(indexBufferHandle);
+	mesh.setVertexBuffer(vertexAllocation);
+	mesh.setIndexBuffer(indexAllocation);
 
-	mesh.setVertexBuffer(vertexAllocation, vertexBuffer);
-	mesh.setIndexBuffer(indexAllocation, indexBuffer);
-
-	this->pushDataToGPUBuffer(mesh.getVertices().data(), mesh.getVertices().size() * sizeof(Vertex), vertexBuffer, 0, true);
-	this->pushDataToGPUBuffer(mesh.getIndices().data(), mesh.getIndices().size() * sizeof(uint32_t), indexBuffer, 0, true);
+	this->pushDataToGPUBuffer(mesh.getVertices().data(), mesh.getVertices().size() * sizeof(Vertex), vertexAllocation, true);
+	this->pushDataToGPUBuffer(mesh.getIndices().data(), mesh.getIndices().size() * sizeof(uint32_t), indexAllocation, true);
 }
 
 void VulkanCraft::Graphics::ResourceManager::refreshMeshGPUData(Mesh & mesh) {
-	this->pushDataToGPUBuffer(mesh.getVertices().data(), mesh.getVertices().size() * sizeof(Vertex), mesh.getVertexBuffer(), 0, true);
-	this->pushDataToGPUBuffer(mesh.getIndices().data(), mesh.getIndices().size() * sizeof(uint32_t), mesh.getIndexBuffer(), 0, true);
+	this->pushDataToGPUBuffer(mesh.getVertices().data(), mesh.getVertices().size() * sizeof(Vertex), mesh.getVertexBuffer(), true);
+	this->pushDataToGPUBuffer(mesh.getIndices().data(), mesh.getIndices().size() * sizeof(uint32_t), mesh.getIndexBuffer(), true);
 }
 
 const std::vector<PendingMemoryTransfer>& VulkanCraft::Graphics::ResourceManager::getImportantPendingTransfers() const noexcept {
@@ -179,18 +188,3 @@ void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
 		}
 	}
 }
-
-/*
-void VulkanCraft::Graphics::ResourceManager::allocateBuffersForMesh(const Core::Mesh & mesh, vk::Buffer * vertex, vk::Buffer * index) {
-	uint64_t vertexBufferSize = sizeof(Vertex) * mesh.getVertexCount();
-	uint64_t indexBufferSize = sizeof(uint32_t) * mesh.getIndexCount();
-	VkBuffer tempVertex;
-	VkBuffer tempIndex;
-
-	VmaAllocation vertexAllocation = this->allocateVertexBuffer(vertexBufferSize, &tempVertex);
-	VmaAllocation indexAllocation = this->allocateIndexBuffer(vertexBufferSize, &tempIndex);
-
-	*vertex = tempVertex;
-	*index = tempIndex;
-}
-*/

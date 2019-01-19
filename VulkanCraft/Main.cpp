@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 		renderingEngine->queueForRendering(testRenderable);
 
 		renderingEngine->endPass();
-		renderingEngine->endFrame(resourceManager->);
+		renderingEngine->endFrame(resourceManager->getImportantPendingTransfers());
 	}
 
 	resourceManager.reset();

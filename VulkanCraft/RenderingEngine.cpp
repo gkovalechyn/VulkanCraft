@@ -159,12 +159,13 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 	for (const auto& descriptorSetWithData : renderable.getDescriptorSets()) {
 		descriptorSets.push_back(descriptorSetWithData.descriptorSet);
 	}
+	auto mesh = renderable.getMesh();
 
-	frame.commandBuffer.bindVertexBuffers(0, { renderable.getVertexBuffer() }, { renderable.getVertexOffset() });
-	frame.commandBuffer.bindIndexBuffer(renderable.getIndexBuffer(), renderable.getIndexBufferOffset(), vk::IndexType::eUint32);
+	frame.commandBuffer.bindVertexBuffers(0, { mesh->getVertexBuffer().buffer }, { mesh->getVertexBuffer().offset });
+	frame.commandBuffer.bindIndexBuffer(mesh->getIndexBuffer().buffer, mesh->getIndexBuffer().offset, vk::IndexType::eUint32);
 	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, descriptorSets, {});
 
-	frame.commandBuffer.drawIndexed(renderable.getNumberOfVerticesToDraw(), 1, 0, 0, 0);
+	frame.commandBuffer.drawIndexed(static_cast<uint32_t>(mesh->getVertices().size()), 1, 0, 0, 0);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::endPass() {
