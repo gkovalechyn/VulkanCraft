@@ -53,7 +53,7 @@ namespace VulkanCraft {
 			GraphicalDevice* getDevice();
 	
 			void registerPipeline(std::string name, GraphicsPipeline* pipeline);
-			GraphicsPipeline* getDefaultPipeline() noexcept;
+			std::shared_ptr<GraphicsPipeline> getDefaultPipeline() noexcept;
 		private:
 			vk::Instance vkInstance;
 			VkDebugReportCallbackEXT debugCallbackHandle;
@@ -61,7 +61,10 @@ namespace VulkanCraft {
 			WindowData window;
 
 			Swapchain* swapchain;
-			GraphicsPipeline* pipeline;
+
+			//This needs to be a shared pointer due to objects referencing the pipeline that should be used to draw them
+			//and they need to know it for them to be able to allocated the proper descriptor sets when their pipeline changes
+			std::shared_ptr<GraphicsPipeline> pipeline;
 			vk::CommandPool commandPool;
 
 			std::vector<PerFrameData> frames;

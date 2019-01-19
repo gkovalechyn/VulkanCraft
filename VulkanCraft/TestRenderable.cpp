@@ -1,30 +1,23 @@
 #include "TestRenderable.h"
 
 VulkanCraft::TestRenderable::TestRenderable() {
-	tinyobj::attrib_t attrib;
-	std::vector<tinyobj::shape_t> shapes;
-	std::vector<tinyobj::material_t> materials;
-
-	std::string warn;
-	std::string err;
-	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "Resources/Models/Cube/Export/cube.obj");
-
-	if (!warn.empty()) {
-		Core::Logger::warning(warn);
-	}
-
-	if (!err.empty()) {
-		Core::Logger::error(err);
-		throw std::runtime_error(err);
-	}
-
-	Core::Logger::debug("Loaded cube obj");
-	this->setMesh(new Core::Mesh(attrib, shapes[0]));
-	
-	Core::Logger::debug("Cube mesh created");
+	this->startTime = std::chrono::high_resolution_clock::now();
 }
 
 
 VulkanCraft::TestRenderable::~TestRenderable() {
 
+}
+
+const glm::mat4 & VulkanCraft::TestRenderable::getModelMatrix() {
+	return this->modelMatrix;
+}
+
+void VulkanCraft::TestRenderable::update() {
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	float timePassed = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - this->startTime).count();
+
+	this->modelMatrix = glm::rotate(glm::mat4(1.0f), timePassed * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+	this->setShaderBufferData<glm::mat4>(0, 0, modelMatrix);
 }

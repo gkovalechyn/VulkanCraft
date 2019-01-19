@@ -3,7 +3,7 @@
 using namespace VulkanCraft;
 using namespace VulkanCraft::Graphics;
 
-VulkanCraft::Graphics::ResourceManager::ResourceManager(vk::PhysicalDevice& physicalDevice, vk::Device & device, vk::Queue transferQueue, uint32_t queueFamilyIndex) : device(device), transferQueue(transferQueue){
+VulkanCraft::Graphics::ResourceManager::ResourceManager(vk::PhysicalDevice& physicalDevice, vk::Device & device, vk::Queue transferQueue, uint32_t queueFamilyIndex) : device(device), transferQueue(transferQueue) {
 	VmaAllocatorCreateInfo allocatorCreateInfo = {};
 	allocatorCreateInfo.device = device;
 	allocatorCreateInfo.physicalDevice = physicalDevice;
@@ -127,21 +127,26 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 	return future;
 }
 
-std::unique_ptr<Core::Mesh> VulkanCraft::Graphics::ResourceManager::createMesh(const tinyobj::attrib_t & attributes, const tinyobj::shape_t & shape) {
-	auto mesh = std::make_unique<Core::Mesh>(attributes, shape);
+void VulkanCraft::Graphics::ResourceManager::uploadMeshToGPU(Mesh & mesh) {
 	VkBuffer vertexBufferHandle;
 	VkBuffer indexBufferHandle;
 
-	VmaAllocation vertexAllocation = this->allocateVertexBuffer(mesh->getVertexCount() * sizeof(Vertex), &vertexBufferHandle);
-	VmaAllocation indexAllocation = this->allocateIndexBuffer(mesh->getIndexCount() * sizeof(uint32_t), &indexBufferHandle);
+	VmaAllocation vertexAllocation = this->allocateVertexBuffer(mesh.getVertexCount() * sizeof(Vertex), &vertexBufferHandle);
+	VmaAllocation indexAllocation = this->allocateIndexBuffer(mesh.getIndexCount() * sizeof(uint32_t), &indexBufferHandle);
 
 	vk::Buffer vertexBuffer(vertexBufferHandle);
 	vk::Buffer indexBuffer(indexBufferHandle);
 
-	mesh->setVertexBuffer(vertexAllocation, vertexBuffer);
-	mesh->setIndexBuffer(indexAllocation, indexBuffer);
-	
-	return mesh;
+	mesh.setVertexBuffer(vertexAllocation, vertexBuffer);
+	mesh.setIndexBuffer(indexAllocation, indexBuffer);
+
+	this->pushDataToGPUBuffer(mesh.getVertices().data(), mesh.getVertices().size() * sizeof(Vertex), vertexBuffer, 0, true);
+	this->pushDataToGPUBuffer(mesh.getIndices().data(), mesh.getIndices().size() * sizeof(uint32_t), indexBuffer, 0, true);
+}
+
+void VulkanCraft::Graphics::ResourceManager::refreshMeshGPUData(Mesh & mesh) {
+	this->pushDataToGPUBuffer(mesh.getVertices().data(), mesh.getVertices().size() * sizeof(Vertex), mesh.getVertexBuffer(), 0, true);
+	this->pushDataToGPUBuffer(mesh.getIndices().data(), mesh.getIndices().size() * sizeof(uint32_t), mesh.getIndexBuffer(), 0, true);
 }
 
 const std::vector<PendingMemoryTransfer>& VulkanCraft::Graphics::ResourceManager::getImportantPendingTransfers() const noexcept {
@@ -153,20 +158,26 @@ const std::vector<PendingMemoryTransfer>& VulkanCraft::Graphics::ResourceManager
 }
 
 void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
-	std::vector<PendingMemoryTransfer> transferVectors[] = { this->pendingImportantTransfers, this->pendingTransfers };
+	//TODO find a way that doesn't require copying the loop for both vectors
+	for (auto it = this->pendingImportantTransfers.rbegin(); it != this->pendingImportantTransfers.rend(); it++) {
+		auto& pendingTransfer = *it;
+		auto fenceStatus = this->device.getFenceStatus(pendingTransfer.doneFence);
 
-	for (auto& tranferVector : transferVectors) {
-		for (auto it = tranferVector.rbegin(); it != tranferVector.rend(); it++) {
-			auto& pendingTransfer = *it;
-			auto fenceStatus = this->device.getFenceStatus(pendingTransfer.doneFence);
-
-			if (fenceStatus == vk::Result::eSuccess) {
-				pendingTransfer.promise.set_value();
-				tranferVector.erase(it.base());
-			}
+		if (fenceStatus == vk::Result::eSuccess) {
+			pendingTransfer.promise.set_value();
+			this->pendingImportantTransfers.erase(it.base());
 		}
 	}
 
+	for (auto it = this->pendingTransfers.rbegin(); it != this->pendingTransfers.rend(); it++) {
+		auto& pendingTransfer = *it;
+		auto fenceStatus = this->device.getFenceStatus(pendingTransfer.doneFence);
+
+		if (fenceStatus == vk::Result::eSuccess) {
+			pendingTransfer.promise.set_value();
+			this->pendingTransfers.erase(it.base());
+		}
+	}
 }
 
 /*

@@ -96,9 +96,6 @@
     <ClCompile Include="Component.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
@@ -106,6 +103,9 @@
       <Filter>lib</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
@@ -185,9 +185,6 @@
     <ClInclude Include="Component.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>Header Files\Core</Filter>
-    </ClInclude>
     <ClInclude Include="ResourceManager.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -195,6 +192,9 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>

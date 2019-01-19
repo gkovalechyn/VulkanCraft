@@ -295,12 +295,16 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 void VulkanCraft::Graphics::ForwardPipeline::createPerFrameData() {
 }
 
+DescriptorSetData VulkanCraft::Graphics::ForwardPipeline::allocateDescriptorSet(uint32_t set, uint32_t index) {
+	//TODO allocate only 1 descriptor set
+}
+
 vk::PipelineLayout VulkanCraft::Graphics::ForwardPipeline::getLayout() {
 	return this->layout;
 }
 
-vk::DescriptorSet VulkanCraft::Graphics::ForwardPipeline::allocateDescriptorSet() {
-	return vk::DescriptorSet();
+std::vector<DescriptorSetData> VulkanCraft::Graphics::ForwardPipeline::allocateDescriptorSets() {
+	vk::DescriptorSetAllocateInfo allocateInfo;
 }
 
 vk::RenderPass VulkanCraft::Graphics::ForwardPipeline::getRenderPass() {

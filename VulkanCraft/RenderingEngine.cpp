@@ -28,7 +28,7 @@ RenderingEngine::~RenderingEngine() {
 
 	this->device->logicalDevice.destroyCommandPool(this->commandPool);
 
-	delete this->pipeline;
+	this->pipeline.reset();
 	delete this->swapchain;
 
 	this->vkInstance.destroySurfaceKHR(this->window.surface);
@@ -52,7 +52,7 @@ void RenderingEngine::initialize(GLFWwindow * window) {
 	this->initializeVulkan();
 	this->initializeGraphicalDevice();
 
-	this->pipeline = new ForwardPipeline(this->device->logicalDevice, this->window.surfaceExtent);
+	this->pipeline = std::make_shared<ForwardPipeline>(this->device->logicalDevice, this->window.surfaceExtent);
 	Core::Logger::debug("Created forward pipeline");
 
 	vk::CommandPoolCreateInfo commandPoolCreateInfo;
@@ -97,7 +97,7 @@ void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeli
 	vk::ClearValue clearValue;
 	clearValue.setColor(std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f});
 
-	//@TODO Add support for multiple render passes and multiple pipelines
+	//TODO: Add support for multiple render passes and multiple pipelines
 	renderPassInfo
 		.setClearValueCount(1)
 		.setPClearValues(&clearValue)
@@ -131,16 +131,16 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 				case vk::DescriptorType::eUniformBuffer:
 				case vk::DescriptorType::eStorageBuffer:
 				case vk::DescriptorType::eStorageBufferDynamic:
-					writeDescriptorSet.setPBufferInfo(&descriptorData.bufferInfo);
+					writeDescriptorSet.setPBufferInfo(&descriptorData.info.bufferInfo);
 					break;
 
 				case vk::DescriptorType::eSampler:
 				case vk::DescriptorType::eStorageImage:
-					writeDescriptorSet.setPImageInfo(&descriptorData.imageInfo);
+					writeDescriptorSet.setPImageInfo(&descriptorData.info.imageInfo);
 					break;
 
 				case vk::DescriptorType::eStorageTexelBuffer:
-					writeDescriptorSet.setPTexelBufferView(&descriptorData.texelView);
+					writeDescriptorSet.setPTexelBufferView(&descriptorData.info.texelView);
 					break;
 
 				default:
@@ -220,7 +220,7 @@ GraphicalDevice * VulkanCraft::Graphics::RenderingEngine::getDevice() {
 	return this->device;
 }
 
-GraphicsPipeline * VulkanCraft::Graphics::RenderingEngine::getDefaultPipeline() noexcept {
+std::shared_ptr<GraphicsPipeline> VulkanCraft::Graphics::RenderingEngine::getDefaultPipeline() noexcept {
 	return this->pipeline;
 }
 

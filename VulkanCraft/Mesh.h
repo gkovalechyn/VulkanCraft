@@ -3,14 +3,18 @@
 #include "Vertex.h"
 #include "libs/tiny_obj_loader.h"
 #include "libs/vk_mem_alloc.h"
+#include "Logger.h"
 
 namespace VulkanCraft {
-	namespace Core {
-		struct Mesh {
+	namespace Graphics {
+		class Mesh {
+		public:
 			Mesh(std::vector<Graphics::Vertex> vertices);
 			Mesh(const tinyobj::attrib_t& attributes, const tinyobj::shape_t& shape);
 			virtual ~Mesh();
 			
+			static std::vector<std::unique_ptr<Mesh>> fromOBJ(const std::string& path);
+
 			Mesh(const Mesh& other) = delete;
 
 			/// <summary>
@@ -38,6 +42,7 @@ namespace VulkanCraft {
 			/// <param name="index">The index.</param>
 			/// <returns>A pointer to the vertex at the given index</returns>
 			Graphics::Vertex* getVertex(int index);
+
 			void setVertexBuffer(VmaAllocation allocation, vk::Buffer& buffer) noexcept;
 			void setIndexBuffer(VmaAllocation allocation, vk::Buffer& buffer) noexcept;
 
@@ -48,6 +53,9 @@ namespace VulkanCraft {
 			VmaAllocation getIndexBufferAllocation() const noexcept;
 
 			size_t getIndexCount() const noexcept;
+
+			const std::vector<Vertex>& getVertices();
+			const std::vector<uint32_t>& getIndices();
 
 		private:
 			std::vector<Graphics::Vertex> vertices;

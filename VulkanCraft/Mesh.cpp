@@ -1,11 +1,12 @@
 #include "Mesh.h"
 
 using namespace VulkanCraft;
+using namespace VulkanCraft::Graphics;
 
-VulkanCraft::Core::Mesh::Mesh(std::vector<Graphics::Vertex> vertices) : vertices(vertices){
+VulkanCraft::Graphics::Mesh::Mesh(std::vector<Graphics::Vertex> vertices) : vertices(vertices){
 }
 
-VulkanCraft::Core::Mesh::Mesh(const tinyobj::attrib_t & attributes, const tinyobj::shape_t& shape) {
+VulkanCraft::Graphics::Mesh::Mesh(const tinyobj::attrib_t & attributes, const tinyobj::shape_t& shape) {
 	uint32_t i = 0;
 	for (const auto& index : shape.mesh.indices) {
 		Graphics::Vertex vertex;
@@ -35,26 +36,53 @@ VulkanCraft::Core::Mesh::Mesh(const tinyobj::attrib_t & attributes, const tinyob
 	}
 }
 
-VulkanCraft::Core::Mesh::~Mesh() {
+VulkanCraft::Graphics::Mesh::~Mesh() {
 }
 
-size_t VulkanCraft::Core::Mesh::getVertexCount() const noexcept{
+std::vector<std::unique_ptr<Mesh>> VulkanCraft::Graphics::Mesh::fromOBJ(const std::string& path) {
+	std::vector<std::unique_ptr<Mesh>> meshes;
+
+	tinyobj::attrib_t attributes;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+
+	std::string warn;
+	std::string err;
+	bool ret = tinyobj::LoadObj(&attributes, &shapes, &materials, &warn, &err, path.c_str());
+
+	if (!warn.empty()) {
+		Core::Logger::warning(warn);
+	}
+
+	if (!err.empty()) {
+		Core::Logger::error(err);
+		throw std::runtime_error(err);
+	}
+
+	for (const auto& shape : shapes) {
+		meshes.push_back(std::make_unique<Mesh>(attributes, shape));
+	}
+
+	return meshes;
+}
+
+size_t VulkanCraft::Graphics::Mesh::getVertexCount() const noexcept{
 	return this->vertices.size();
 }
 
-void VulkanCraft::Core::Mesh::setVertex(int index, Graphics::Vertex & vertex) {
+void VulkanCraft::Graphics::Mesh::setVertex(int index, Graphics::Vertex & vertex) {
 	if (index >= 0 && index < this->vertices.size()) {
 		this->vertices[index] = vertex;
 		this->dirty = true;
 	}
 }
 
-void VulkanCraft::Core::Mesh::addVertex(Graphics::Vertex & vertex) {
+void VulkanCraft::Graphics::Mesh::addVertex(Graphics::Vertex & vertex) {
 	this->vertices.push_back(vertex);
 	this->dirty = true;
 }
 
-Graphics::Vertex* VulkanCraft::Core::Mesh::getVertex(int index) {
+Graphics::Vertex* VulkanCraft::Graphics::Mesh::getVertex(int index) {
 	if (index >= 0 && index < this->vertices.size()) {
 		return &this->vertices[index];
 	}else{
@@ -62,24 +90,40 @@ Graphics::Vertex* VulkanCraft::Core::Mesh::getVertex(int index) {
 	}
 }
 
-void VulkanCraft::Core::Mesh::setVertexBuffer(VmaAllocation allocation, vk::Buffer & buffer) noexcept {
+void VulkanCraft::Graphics::Mesh::setVertexBuffer(VmaAllocation allocation, vk::Buffer & buffer) noexcept {
 	this->vertexAllocation = allocation;
 	this->vertexBuffer = buffer;
 }
 
-void VulkanCraft::Core::Mesh::setIndexBuffer(VmaAllocation allocation, vk::Buffer & buffer) noexcept {
+void VulkanCraft::Graphics::Mesh::setIndexBuffer(VmaAllocation allocation, vk::Buffer & buffer) noexcept {
 	this->indexAllocation = allocation;
 	this->indexBuffer = buffer;
 }
 
-vk::Buffer VulkanCraft::Core::Mesh::getVertexBuffer() const noexcept {
+vk::Buffer VulkanCraft::Graphics::Mesh::getVertexBuffer() const noexcept {
 	return this->vertexBuffer;
 }
 
-vk::Buffer VulkanCraft::Core::Mesh::getIndexBuffer() const noexcept {
+VmaAllocation VulkanCraft::Graphics::Mesh::getVertexBufferAllocation() const noexcept {
+	return this->vertexAllocation;
+}
+
+vk::Buffer VulkanCraft::Graphics::Mesh::getIndexBuffer() const noexcept {
 	return this->indexBuffer;
 }
 
-size_t VulkanCraft::Core::Mesh::getIndexCount() const noexcept {
+VmaAllocation VulkanCraft::Graphics::Mesh::getIndexBufferAllocation() const noexcept {
+	return this->indexAllocation;
+}
+
+size_t VulkanCraft::Graphics::Mesh::getIndexCount() const noexcept {
 	return this->indices.size();
+}
+
+const std::vector<Vertex>& VulkanCraft::Graphics::Mesh::getVertices() {
+	return this->vertices;
+}
+
+const std::vector<uint32_t>& VulkanCraft::Graphics::Mesh::getIndices() {
+	return this->indices;
 }

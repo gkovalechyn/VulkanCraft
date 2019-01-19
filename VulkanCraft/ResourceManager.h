@@ -42,7 +42,8 @@ namespace VulkanCraft {
 			void unmapAllocation(const VmaAllocation& allocation);
 
 			std::future<void> pushDataToGPUBuffer(const void* data, const uint64_t size, const vk::Buffer& to, const uint64_t offset = 0, const bool important = false);
-			std::unique_ptr<Core::Mesh> createMesh(const tinyobj::attrib_t & attributes, const tinyobj::shape_t& shape);
+			void uploadMeshToGPU(Mesh& mesh);
+			void refreshMeshGPUData(Mesh& mesh);
 
 			const std::vector<PendingMemoryTransfer>& getImportantPendingTransfers() const noexcept;
 			const std::vector<PendingMemoryTransfer>& getPendingTransfers() const noexcept;
