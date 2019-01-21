@@ -1,5 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
+#include "GPUAllocation.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -24,8 +25,7 @@ namespace VulkanCraft {
 			virtual vk::RenderPass getRenderPass() = 0;
 			virtual vk::Rect2D getRenderArea() = 0;
 			virtual vk::PipelineLayout getLayout() = 0;
-			virtual std::vector<DescriptorSetData> allocateDescriptorSets() = 0;
-			virtual DescriptorSetData allocateDescriptorSet(uint32_t set, uint32_t index) = 0;
+			virtual vk::DescriptorSetLayout getDescriptorSetLayout() = 0;
 
 			virtual void recreate() = 0;
 			virtual void cleanup() = 0;

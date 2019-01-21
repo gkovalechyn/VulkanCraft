@@ -206,6 +206,9 @@
     <ClInclude Include="GPUAllocation.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="RenderData.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Pipelines\Example.json">

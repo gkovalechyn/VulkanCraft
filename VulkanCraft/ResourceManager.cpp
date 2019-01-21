@@ -3,34 +3,39 @@
 using namespace VulkanCraft;
 using namespace VulkanCraft::Graphics;
 
-VulkanCraft::Graphics::ResourceManager::ResourceManager(vk::PhysicalDevice& physicalDevice, vk::Device & device, vk::Queue transferQueue, uint32_t queueFamilyIndex) : device(device), transferQueue(transferQueue) {
+VulkanCraft::Graphics::ResourceManager::ResourceManager(const GraphicalDevice& device, vk::DescriptorSetLayout pipelineLayout) : device{ &device }, layout { pipelineLayout } {
 	VmaAllocatorCreateInfo allocatorCreateInfo = {};
-	allocatorCreateInfo.device = device;
-	allocatorCreateInfo.physicalDevice = physicalDevice;
+	allocatorCreateInfo.device = device.logicalDevice;
+	allocatorCreateInfo.physicalDevice = device.physicalDevice;
 
 	auto result = vmaCreateAllocator(&allocatorCreateInfo, &(this->vma));
 
 	vk::CommandPoolCreateInfo createInfo;
 	createInfo
-		.setQueueFamilyIndex(queueFamilyIndex);
+		.setQueueFamilyIndex(device.graphicsFamilyIndex);
 
-	this->commandPool = device.createCommandPool(createInfo);
+	this->commandPool = device.logicalDevice.createCommandPool(createInfo);
 
 	VkBuffer vertexBufferHandle;
-	auto vertexAllocation = this->allocateVertexBuffer(64 * 1024 * 1024, &vertexBufferHandle);
-	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(vertexBufferHandle), vertexAllocation, 64 * 1024 * 1024);
+	auto vertexAllocation = this->allocateVertexBuffer(64 * 1024, &vertexBufferHandle);
+	VmaAllocationInfo info;
+	vmaGetAllocationInfo(this->vma, vertexAllocation, &info);
+	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(vertexBufferHandle), vertexAllocation, info);
 
 	VkBuffer indexBufferHandle;
-	auto indexAllocation = this->allocateVertexBuffer(64 * 1024 * 1024, &indexBufferHandle);
-	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(indexBufferHandle), indexAllocation, 64 * 1024 * 1024);
+	auto indexAllocation = this->allocateIndexBuffer(64 * 1024, &indexBufferHandle);
+	vmaGetAllocationInfo(this->vma, indexAllocation, &info);
+	this->indexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(indexBufferHandle), indexAllocation, info);
 
 	VkBuffer uboBufferHandle;
-	auto uboAllocation = this->allocateBuffer(128 * 1024 * 1024, &uboBufferHandle, vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY);
-	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(uboBufferHandle), uboAllocation, 128 * 1024 * 1024);
+	auto uboAllocation = this->allocateBuffer(128 * 1024, &uboBufferHandle, vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY);
+	vmaGetAllocationInfo(this->vma, uboAllocation, &info);
+	this->uboBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(uboBufferHandle), uboAllocation, info);
 
 	VkBuffer stagingBufferHandle;
-	auto stagingAllocation = this->allocateStagingBuffer(64 * 1024 * 1024, &stagingBufferHandle);
-	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(stagingBufferHandle), stagingAllocation, 64 * 1024 * 1024);
+	auto stagingAllocation = this->allocateStagingBuffer(64 * 1024, &stagingBufferHandle);
+	vmaGetAllocationInfo(this->vma, stagingAllocation, &info);
+	this->stagingBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(stagingBufferHandle), stagingAllocation, info);
 
 	this->mapAllocation(this->stagingBufferManager->getBufferAllocation(), &this->mappedStagingBuffer);
 }
@@ -52,12 +57,12 @@ VmaAllocation VulkanCraft::Graphics::ResourceManager::allocateStagingBuffer(uint
 }
 
 VmaAllocation VulkanCraft::Graphics::ResourceManager::allocateBuffer(uint64_t sizeInBytes, VkBuffer * outHandle, vk::BufferUsageFlags usageFlags, VmaMemoryUsage usage) {
-	vk::BufferCreateInfo bufferCreateInfo;
+	vk::BufferCreateInfo bufferCreateInfo = {};
 	bufferCreateInfo
 		.setSize(sizeInBytes)
 		.setUsage(usageFlags);
 
-	VmaAllocationCreateInfo allocationCreateInfo;
+	VmaAllocationCreateInfo allocationCreateInfo = {};
 	allocationCreateInfo.usage = usage;
 
 	VmaAllocation allocation;
@@ -84,7 +89,7 @@ void VulkanCraft::Graphics::ResourceManager::unmapAllocation(const VmaAllocation
 }
 
 std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(const void * data, const uint64_t size, const GPUAllocation& to, const bool important) {
-	GPUAllocation stagingAllocation = this->stagingBufferManager->allocateMemory(size, 1);
+	GPUAllocation stagingAllocation = this->stagingBufferManager->allocateMemory(size);
 	VmaAllocation vmaAllocation = this->stagingBufferManager->getBufferAllocation();
 	
 	memcpy(((uint8_t*) this->mappedStagingBuffer) + stagingAllocation.offset, data, size);
@@ -104,9 +109,9 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 	transfer.to = to.buffer;
 	transfer.toOffset = to.offset;
 
-	transfer.doneFence = this->device.createFence({});
-	transfer.doneSemaphore = this->device.createSemaphore({});
-	transfer.commandBuffer = this->device.allocateCommandBuffers(commandBufferAllocateInfo)[0];
+	transfer.doneFence = this->device->logicalDevice.createFence({});
+	transfer.doneSemaphore = this->device->logicalDevice.createSemaphore({});
+	transfer.commandBuffer = this->device->logicalDevice.allocateCommandBuffers(commandBufferAllocateInfo)[0];
 
 	vk::CommandBufferBeginInfo beginInfo;
 	beginInfo
@@ -127,9 +132,9 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 		.setCommandBufferCount(1)
 		.setPCommandBuffers(&transfer.commandBuffer)
 		.setSignalSemaphoreCount(1)
-		.setPWaitSemaphores(&transfer.doneSemaphore);
+		.setPSignalSemaphores(&transfer.doneSemaphore);
 
-	this->transferQueue.submit(submitInfo, transfer.doneFence);
+	this->device->graphicsQueue.submit(submitInfo, transfer.doneFence);
 	auto future = transfer.promise.get_future();
 
 	if (important) {
@@ -143,8 +148,8 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 
 void VulkanCraft::Graphics::ResourceManager::uploadMeshToGPU(Mesh & mesh) {
 
-	GPUAllocation vertexAllocation = this->vertexBufferManager->allocateMemory(sizeof(Vertex) * mesh.getVertexCount(), 16);
-	GPUAllocation indexAllocation = this->indexBufferManager->allocateMemory(sizeof(uint32_t) * mesh.getVertexCount(), sizeof(uint32_t));
+	GPUAllocation vertexAllocation = this->vertexBufferManager->allocateMemory(sizeof(Vertex) * mesh.getVertexCount());
+	GPUAllocation indexAllocation = this->indexBufferManager->allocateMemory(sizeof(uint32_t) * mesh.getVertexCount());
 
 	mesh.setVertexBuffer(vertexAllocation);
 	mesh.setIndexBuffer(indexAllocation);
@@ -170,7 +175,7 @@ void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
 	//TODO find a way that doesn't require copying the loop for both vectors
 	for (auto it = this->pendingImportantTransfers.rbegin(); it != this->pendingImportantTransfers.rend(); it++) {
 		auto& pendingTransfer = *it;
-		auto fenceStatus = this->device.getFenceStatus(pendingTransfer.doneFence);
+		auto fenceStatus = this->device->logicalDevice.getFenceStatus(pendingTransfer.doneFence);
 
 		if (fenceStatus == vk::Result::eSuccess) {
 			pendingTransfer.promise.set_value();
@@ -180,11 +185,88 @@ void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
 
 	for (auto it = this->pendingTransfers.rbegin(); it != this->pendingTransfers.rend(); it++) {
 		auto& pendingTransfer = *it;
-		auto fenceStatus = this->device.getFenceStatus(pendingTransfer.doneFence);
+		auto fenceStatus = this->device->logicalDevice.getFenceStatus(pendingTransfer.doneFence);
 
 		if (fenceStatus == vk::Result::eSuccess) {
 			pendingTransfer.promise.set_value();
 			this->pendingTransfers.erase(it.base());
 		}
 	}
+}
+
+void VulkanCraft::Graphics::ResourceManager::createModelUbo(const uint32_t maxModelCount) {
+	VkBuffer handle;
+
+	//https://github.com/SaschaWillems/Vulkan/tree/master/examples/dynamicuniformbuffer
+	auto minUboAlignment = this->device->properties.limits.minUniformBufferOffsetAlignment;
+	auto dynamicAlignment = sizeof(glm::mat4);
+	if (minUboAlignment > 0) {
+		dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
+	}
+
+	this->modelUboAlignment = dynamicAlignment;
+
+	this->modelUboAllocation = this->allocateBuffer(
+		maxModelCount * dynamicAlignment,
+		&handle,
+		vk::BufferUsageFlagBits::eUniformBuffer,
+		VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU
+	);
+
+	this->modelUboBuffer = vk::Buffer(handle);
+
+	vk::DescriptorPoolSize poolSize = {};
+	poolSize
+		.setDescriptorCount(1)
+		.setType(vk::DescriptorType::eStorageBufferDynamic);
+
+	vk::DescriptorPoolCreateInfo poolCreateInfo = {};
+	poolCreateInfo
+		.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
+		.setPoolSizeCount(1)
+		.setPPoolSizes(&poolSize)
+		.setMaxSets(10);
+
+	this->modelDescriptorPool = this->device->logicalDevice.createDescriptorPool(poolCreateInfo);
+
+	vk::DescriptorSetAllocateInfo allocateInfo = {};
+	allocateInfo
+		.setDescriptorPool(this->modelDescriptorPool)
+		.setDescriptorSetCount(1)
+		.setPSetLayouts(&this->layout);
+
+	this->modelDescriptorSet = this->device->logicalDevice.allocateDescriptorSets(allocateInfo)[0];
+
+
+	vk::DescriptorBufferInfo bufferInfo = {};
+	bufferInfo
+		.setBuffer(this->modelUboBuffer)
+		.setOffset(0)
+		.setRange(VK_WHOLE_SIZE);
+
+	vk::WriteDescriptorSet writeDescriptorSet = {};
+	writeDescriptorSet
+		.setDescriptorCount(1)
+		.setDescriptorType(vk::DescriptorType::eUniformBufferDynamic)
+		.setDstBinding(0)
+		.setDstSet(this->modelDescriptorSet)
+		.setPBufferInfo(&bufferInfo);
+
+	this->device->logicalDevice.updateDescriptorSets({ writeDescriptorSet }, {});
+}
+
+void VulkanCraft::Graphics::ResourceManager::mapModelDynamicUbo(void ** ptr) {
+	vmaMapMemory(this->vma, this->modelUboAllocation, ptr);
+}
+
+void VulkanCraft::Graphics::ResourceManager::unmapModelDynamicUbo() {
+	vmaUnmapMemory(this->vma, this->modelUboAllocation);
+}
+
+uint64_t VulkanCraft::Graphics::ResourceManager::getModelUboRequiredAlignment() {
+	return this->modelUboAlignment;
+}
+
+vk::DescriptorSet VulkanCraft::Graphics::ResourceManager::getModelDescriptorSet() {
+	return this->modelDescriptorSet;
 }

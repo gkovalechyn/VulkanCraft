@@ -18,6 +18,4 @@ void VulkanCraft::TestRenderable::update() {
 	float timePassed = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - this->startTime).count();
 
 	this->modelMatrix = glm::rotate(glm::mat4(1.0f), timePassed * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-	this->setShaderBufferData<glm::mat4>(0, 0, modelMatrix);
 }

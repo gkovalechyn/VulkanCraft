@@ -19,6 +19,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 }
 
 RenderingEngine::RenderingEngine() {
+	
 }
 
 
@@ -63,6 +64,10 @@ void RenderingEngine::initialize(GLFWwindow * window) {
 	this->commandPool = this->device->logicalDevice.createCommandPool(commandPoolCreateInfo);
 
 	this->createPerFrameData();
+
+	this->resourceManager = std::make_unique<VulkanCraft::Graphics::ResourceManager>(*this->device, this->getDefaultPipeline()->getDescriptorSetLayout());
+
+	this->resourceManager->createModelUbo(256);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::beginFrame() {
@@ -88,6 +93,8 @@ void VulkanCraft::Graphics::RenderingEngine::beginFrame() {
 		.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
 	frame.commandBuffer.begin(beginInfo);
+
+	this->resourceManager->mapModelDynamicUbo(&this->modelUboMemory);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeline, Camera& camera) {
@@ -115,6 +122,7 @@ void VulkanCraft::Graphics::RenderingEngine::beginPass(GraphicsPipeline & pipeli
 void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & renderable) {
 	const PerFrameData& frame = this->frames[this->currentFrame];
 
+	/*
 	if (renderable.areDescriptorSetsDirty()) {
 		std::vector<vk::WriteDescriptorSet> writes(renderable.getDescriptorSets().size());
 
@@ -153,17 +161,26 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 
 		this->device->logicalDevice.updateDescriptorSets(writes, {});
 	}
+	*/
 
+	/*
 	std::vector<vk::DescriptorSet> descriptorSets(renderable.getDescriptorSets().size());
 
 	for (const auto& descriptorSetWithData : renderable.getDescriptorSets()) {
 		descriptorSets.push_back(descriptorSetWithData.descriptorSet);
 	}
+	*/
 	auto mesh = renderable.getMesh();
+	auto renderData = renderable.getRenderData();
+	
+	auto modelMatrix = renderable.getModelMatrix();
+
+	renderData.uboIndex = 0;
+	memcpy(this->modelUboMemory, &modelMatrix, sizeof(glm::mat4));
 
 	frame.commandBuffer.bindVertexBuffers(0, { mesh->getVertexBuffer().buffer }, { mesh->getVertexBuffer().offset });
 	frame.commandBuffer.bindIndexBuffer(mesh->getIndexBuffer().buffer, mesh->getIndexBuffer().offset, vk::IndexType::eUint32);
-	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, descriptorSets, {});
+	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, {this->resourceManager->getModelDescriptorSet()}, {renderData.uboIndex});
 
 	frame.commandBuffer.drawIndexed(static_cast<uint32_t>(mesh->getVertices().size()), 1, 0, 0, 0);
 }
@@ -215,10 +232,20 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame(const std::vector<PendingM
 		.setPImageIndices(&imageIndex);
 
 	this->device->graphicsQueue.presentKHR(presentInfo);
+
+	this->resourceManager->unmapModelDynamicUbo();
+
+	std::stringstream newTitle;
+	newTitle << "VulkanCraft frame " << this->currentFrame;
+	glfwSetWindowTitle(this->window.handle, newTitle.str().c_str());
 }
 
 GraphicalDevice * VulkanCraft::Graphics::RenderingEngine::getDevice() {
 	return this->device;
+}
+
+ResourceManager * VulkanCraft::Graphics::RenderingEngine::getResourceManager() {
+	return this->resourceManager.get();
 }
 
 std::shared_ptr<GraphicsPipeline> VulkanCraft::Graphics::RenderingEngine::getDefaultPipeline() noexcept {
@@ -240,8 +267,15 @@ void RenderingEngine::initializeVulkan() {
 
 #ifdef DEBUG
 	extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+	extensions.push_back("VK_EXT_debug_utils");
 #endif // DEBUG
+	for (const auto& layerProperty : vk::enumerateInstanceLayerProperties()) {
+		Core::Logger::vaLog(Core::LogLevel::eDebug, "Available layer: %s, spec %d", layerProperty.layerName, layerProperty.specVersion);
+	}
 
+	for (const auto& extensionProperty : vk::enumerateInstanceExtensionProperties()) {
+		Core::Logger::vaLog(Core::LogLevel::eDebug, "Available extension: %s, spec %d", extensionProperty.extensionName, extensionProperty.specVersion);
+	}
 
 	vk::InstanceCreateInfo createInfo;
 	createInfo.setPApplicationInfo(&applicationInfo)

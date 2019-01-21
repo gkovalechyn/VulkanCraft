@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.hpp>
 #include "Mesh.h"
 #include "BufferMemoryManager.h"
+#include "GraphicalDevice.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -27,7 +28,7 @@ namespace VulkanCraft {
 
 		class ResourceManager {
 		public:
-			ResourceManager(vk::PhysicalDevice& physicalDevice, vk::Device & device, vk::Queue transferQueue, uint32_t queueFamilyIndex);
+			ResourceManager(const GraphicalDevice& device, vk::DescriptorSetLayout layout);
 			~ResourceManager();
 
 			VmaAllocation allocateVertexBuffer(uint64_t sizeInBytes, VkBuffer * outHandle);
@@ -50,9 +51,17 @@ namespace VulkanCraft {
 			const std::vector<PendingMemoryTransfer>& getPendingTransfers() const noexcept;
 
 			void updateTransfers() noexcept;
+
+			void createModelUbo(const uint32_t maxModelCount);
+
+			void mapModelDynamicUbo(void** ptr);
+			void unmapModelDynamicUbo();
+
+			uint64_t getModelUboRequiredAlignment();
+
+			vk::DescriptorSet getModelDescriptorSet();
 		private:
-			vk::Device device;
-			vk::Queue transferQueue;
+			const GraphicalDevice* device;
 			vk::CommandPool commandPool;
 
 			std::vector<PendingMemoryTransfer> pendingTransfers;
@@ -62,6 +71,14 @@ namespace VulkanCraft {
 			std::unique_ptr<BufferMemoryManager> indexBufferManager;
 			std::unique_ptr<BufferMemoryManager> stagingBufferManager;
 			std::unique_ptr<BufferMemoryManager> uboBufferManager;
+
+			vk::DescriptorPool modelDescriptorPool;
+			vk::DescriptorSet modelDescriptorSet;
+
+			vk::DescriptorSetLayout layout;
+			VmaAllocation modelUboAllocation;
+			vk::Buffer modelUboBuffer;
+			uint64_t modelUboAlignment;
 
 			void* mappedStagingBuffer;
 

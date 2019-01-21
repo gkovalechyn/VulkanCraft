@@ -25,8 +25,7 @@ namespace VulkanCraft {
 			virtual vk::RenderPass getRenderPass() override;
 			virtual vk::Rect2D getRenderArea() override;
 			virtual vk::PipelineLayout getLayout() override;
-			virtual std::vector<DescriptorSetData> allocateDescriptorSets() override;
-			virtual DescriptorSetData allocateDescriptorSet(uint32_t set, uint32_t index) override;
+			virtual vk::DescriptorSetLayout getDescriptorSetLayout() override;
 
 			virtual void recreate() override;
 			virtual void cleanup() override;
@@ -58,6 +57,8 @@ namespace VulkanCraft {
 			void createRenderPass();
 			void createPipeline();
 			void createPerFrameData();
+
+			
 		};
 	};
 };

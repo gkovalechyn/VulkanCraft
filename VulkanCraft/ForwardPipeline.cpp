@@ -90,7 +90,7 @@ void VulkanCraft::Graphics::ForwardPipeline::createLayout() {
 	descriptorBinding0
 		.setBinding(0)
 		.setDescriptorCount(1)
-		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setDescriptorType(vk::DescriptorType::eUniformBufferDynamic)
 		.setStageFlags(vk::ShaderStageFlagBits::eVertex);
 
 	vk::DescriptorSetLayoutCreateInfo descriptorLayoutCreateInfo;
@@ -295,18 +295,13 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 void VulkanCraft::Graphics::ForwardPipeline::createPerFrameData() {
 }
 
-DescriptorSetData VulkanCraft::Graphics::ForwardPipeline::allocateDescriptorSet(uint32_t set, uint32_t index) {
-	return DescriptorSetData();
+vk::DescriptorSetLayout VulkanCraft::Graphics::ForwardPipeline::getDescriptorSetLayout() {
+	return this->descriptorSetLayout;
 }
 
 vk::PipelineLayout VulkanCraft::Graphics::ForwardPipeline::getLayout() {
 	return this->layout;
 }
-
-std::vector<DescriptorSetData> VulkanCraft::Graphics::ForwardPipeline::allocateDescriptorSets() {
-	vk::DescriptorSetAllocateInfo allocateInfo;
-}
-
 vk::RenderPass VulkanCraft::Graphics::ForwardPipeline::getRenderPass() {
 	return this->renderPass;
 }

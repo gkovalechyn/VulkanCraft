@@ -3,6 +3,7 @@
 #include "Mesh.h"
 #include "GraphicsPipeline.h"
 #include "ResourceManager.h"
+#include "RenderData.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -19,9 +20,6 @@ namespace VulkanCraft {
 			std::vector<DescriptorSetData>& getDescriptorSets();
 			bool areDescriptorSetsDirty();
 
-			template <typename T>
-			void setShaderBufferData(const uint32_t set, const uint32_t binding, T value, uint64_t offsetInBuffer = 0);
-
 			virtual const glm::mat4& getModelMatrix() = 0;
 
 			std::shared_ptr<Mesh> getMesh();
@@ -32,7 +30,10 @@ namespace VulkanCraft {
 			void setPipeline(const std::shared_ptr<GraphicsPipeline>& pipeline);
 
 			void setResourceManager(const std::shared_ptr<ResourceManager>& resourceManager);
+
+			RenderData& getRenderData();
 		private:
+			RenderData renderData;
 			std::shared_ptr<Mesh> mesh;
 
 			std::vector<DescriptorSetData> validDescriptorSets;
@@ -45,15 +46,5 @@ namespace VulkanCraft {
 
 			uint32_t instanceId;
 		};
-
-		template<typename T>
-		inline void Renderable::setShaderBufferData(const uint32_t set, const uint32_t binding, T value, uint64_t offsetInBuffer) {
-			const auto descriptorData = this->pipeline->allocateDescriptorSet(set, binding);
-			vk::DescriptorBufferInfo bufferInfo;
-			bufferInfo
-				.setBuffer(descriptorData.data.buffer)
-				.setOffset(offsetInBuffer)
-				.setRange(sizeof(T));
-		}
 	}
 }

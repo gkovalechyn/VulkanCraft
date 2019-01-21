@@ -19,6 +19,8 @@ GraphicalDevice* GraphicalDevice::getGraphicalDevice(
 		}
 	}
 
+	device->properties = device->physicalDevice.getProperties();
+
 	std::vector<vk::QueueFamilyProperties> queueFamilyProperties = device->physicalDevice.getQueueFamilyProperties();
 	uint32_t queueFamilyIndex = 0;
 

@@ -20,20 +20,15 @@ int main(int argc, char* argv[]) {
 	auto renderingEngine = std::make_unique<VulkanCraft::Graphics::RenderingEngine>();
 	renderingEngine->initialize(window);
 	VulkanCraft::Graphics::Camera camera;
-	auto resourceManager = std::make_shared<VulkanCraft::Graphics::ResourceManager>(
-		renderingEngine->getDevice()->physicalDevice,
-		renderingEngine->getDevice()->logicalDevice,
-		renderingEngine->getDevice()->graphicsQueue,
-		renderingEngine->getDevice()->graphicsFamilyIndex
-	);
+	auto resourceManager = renderingEngine->getResourceManager();
 
-	auto shapes = VulkanCraft::Graphics::Mesh::fromOBJ("Resources/Models/Cube/Cube.obj");
+	auto shapes = VulkanCraft::Graphics::Mesh::fromOBJ("Resources/Models/Cube/Export/Cube.obj");
 	resourceManager->uploadMeshToGPU(*shapes[0]);
 
 	VulkanCraft::TestRenderable testRenderable;
 	testRenderable.setMesh(std::move(shapes[0]));
 	testRenderable.setPipeline(renderingEngine->getDefaultPipeline());
-	testRenderable.setResourceManager(resourceManager);
+	//testRenderable.setResourceManager(resourceManager);
 
 	auto defaultPipeline = renderingEngine->getDefaultPipeline();
 
@@ -49,7 +44,6 @@ int main(int argc, char* argv[]) {
 		renderingEngine->endFrame(resourceManager->getImportantPendingTransfers());
 	}
 
-	resourceManager.reset();
 	renderingEngine.reset();
 	glfwDestroyWindow(window);
 	glfwTerminate();

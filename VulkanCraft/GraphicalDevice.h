@@ -12,6 +12,8 @@ namespace VulkanCraft {
 
 			vk::PhysicalDevice physicalDevice;
 			vk::Device logicalDevice;
+			vk::PhysicalDeviceProperties properties;
+
 			uint32_t graphicsFamilyIndex = -1;
 			uint32_t transferFamilyIndex = -1;
 			uint32_t computeFamilyIndex = -1;

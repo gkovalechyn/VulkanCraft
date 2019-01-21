@@ -7,10 +7,10 @@ namespace VulkanCraft {
 	namespace Graphics {
 		class BufferMemoryManager {
 		public:
-			BufferMemoryManager(vk::Buffer buffer, VmaAllocation allocation, uint64_t size);
+			BufferMemoryManager(vk::Buffer buffer, VmaAllocation allocation, VmaAllocationInfo info);
 			~BufferMemoryManager();
 
-			GPUAllocation allocateMemory(const uint64_t size, const uint32_t requiredAlignment);
+			GPUAllocation allocateMemory(const uint64_t size);
 			void freeAllocation(const GPUAllocation& allocation);
 
 			uint64_t getFreeMemorySize();

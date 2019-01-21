@@ -2,8 +2,8 @@
 
 using namespace VulkanCraft::Graphics;
 
-VulkanCraft::Graphics::BufferMemoryManager::BufferMemoryManager(vk::Buffer buffer, VmaAllocation allocation, uint64_t size) : buffer{ buffer }, allocation { allocation } {
-	auto initialFreeBlock = MemoryBlock(0, static_cast<uint64_t>(0), size);
+VulkanCraft::Graphics::BufferMemoryManager::BufferMemoryManager(vk::Buffer buffer, VmaAllocation allocation, VmaAllocationInfo info) : buffer{ buffer }, allocation { allocation } {
+	auto initialFreeBlock = MemoryBlock(0, static_cast<uint64_t>(0), info.size);
 
 	this->freeBlocks.push_back(initialFreeBlock);
 }
@@ -11,11 +11,7 @@ VulkanCraft::Graphics::BufferMemoryManager::BufferMemoryManager(vk::Buffer buffe
 VulkanCraft::Graphics::BufferMemoryManager::~BufferMemoryManager() {
 }
 
-GPUAllocation VulkanCraft::Graphics::BufferMemoryManager::allocateMemory(const uint64_t size, const uint32_t requiredAlignment) {
-	if (size % requiredAlignment != 0) {
-		throw std::runtime_error("Memory size does not match required alignment");
-	}
-
+GPUAllocation VulkanCraft::Graphics::BufferMemoryManager::allocateMemory(const uint64_t size) {
 	for (auto it = this->freeBlocks.begin(); it != this->freeBlocks.end(); it++) {
 		auto freeBlock = *it;
 

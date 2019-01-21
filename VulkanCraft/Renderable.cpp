@@ -38,3 +38,7 @@ void VulkanCraft::Graphics::Renderable::setPipeline(const std::shared_ptr<Graphi
 void VulkanCraft::Graphics::Renderable::setResourceManager(const std::shared_ptr<ResourceManager>& resourceManager) {
 	this->resourceManager = resourceManager;
 }
+
+RenderData & VulkanCraft::Graphics::Renderable::getRenderData() {
+	return this->renderData;
+}

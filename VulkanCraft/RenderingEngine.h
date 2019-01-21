@@ -14,6 +14,8 @@
 #include "Renderable.h"
 #include "Camera.h"
 #include "ResourceManager.h"
+#include "RenderData.h"
+#include <sstream>
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -40,7 +42,6 @@ namespace VulkanCraft {
 			~RenderingEngine();
 
 			RenderingEngine(const RenderingEngine& other) = delete;
-			RenderingEngine(RenderingEngine&& other) = delete;
 
 			void initialize(GLFWwindow* window);
 			
@@ -51,7 +52,8 @@ namespace VulkanCraft {
 			void endFrame(const std::vector<PendingMemoryTransfer>& pendingTransfers);
 
 			GraphicalDevice* getDevice();
-	
+			ResourceManager* getResourceManager();
+
 			void registerPipeline(std::string name, GraphicsPipeline* pipeline);
 			std::shared_ptr<GraphicsPipeline> getDefaultPipeline() noexcept;
 		private:
@@ -65,16 +67,19 @@ namespace VulkanCraft {
 			//This needs to be a shared pointer due to objects referencing the pipeline that should be used to draw them
 			//and they need to know it for them to be able to allocated the proper descriptor sets when their pipeline changes
 			std::shared_ptr<GraphicsPipeline> pipeline;
+			std::unique_ptr<ResourceManager> resourceManager;
 			vk::CommandPool commandPool;
+			void* modelUboMemory;
 
 			std::vector<PerFrameData> frames;
 			int currentFrame = 0;
-			
 
 #ifdef DEBUG
-			std::vector<const char*> requiredLayers = { "VK_LAYER_LUNARG_standard_validation" };
+			std::vector<const char*> requiredLayers = { "VK_LAYER_LUNARG_standard_validation"};
+			std::vector<const char*> requiredExtensions = { "VK_EXT_debug_report" };
 #else
 			std::vector<const char*> requiredLayers = {};
+			std::vector<const char*> requiredExtensions = {};
 #endif// DEBUG
 
 			void initializeVulkan();

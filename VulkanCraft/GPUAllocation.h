@@ -12,10 +12,10 @@ namespace VulkanCraft {
 				offset{ offset }
 			{};
 
-			const uint64_t id;
-			const vk::Buffer buffer;
-			const uint64_t size;
-			const uint64_t offset;
+			uint64_t id;
+			vk::Buffer buffer;
+			uint64_t size;
+			uint64_t offset;
 		};
 	}
 }
