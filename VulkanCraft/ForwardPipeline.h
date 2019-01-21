@@ -5,13 +5,14 @@
 #include "FileUtils.h"
 #include "Vertex.h"
 #include "Logger.h"
+#include "WindowData.h"
 
 namespace VulkanCraft {
 	namespace Graphics {
 
 		class ForwardPipeline : public GraphicsPipeline {
 		public:
-			ForwardPipeline(const vk::Device& logicalDevice, const vk::Extent2D viewport);
+			ForwardPipeline(const vk::Device& logicalDevice, const WindowData& windowData);
 			~ForwardPipeline();
 
 			ForwardPipeline(const ForwardPipeline& other) = delete;
@@ -32,7 +33,7 @@ namespace VulkanCraft {
 
 		private:
 			const vk::Device& device;
-			vk::Extent2D viewport;
+			WindowData windowData;
 
 			std::string description;
 

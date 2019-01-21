@@ -2,9 +2,10 @@
 #include <string>
 #include "libs/vk_mem_alloc.h" //Here to prevent the APIENTRY macro redefinition
 #define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <vulkan/vulkan.hpp>
+#include <sstream>
+#include <corecrt_malloc.h>
 
+#include "WindowData.h"
 #include "GlobalDefines.h"
 #include "Logger.h"
 #include "GraphicalDevice.h"
@@ -15,8 +16,8 @@
 #include "Camera.h"
 #include "ResourceManager.h"
 #include "RenderData.h"
-#include <sstream>
-#include <corecrt_malloc.h>
+
+
 
 namespace VulkanCraft {
 	namespace Graphics {
@@ -27,14 +28,6 @@ namespace VulkanCraft {
 			vk::Semaphore renderingDoneSemaphore;
 			vk::Fence inFlightFence;
 			vk::DescriptorPool descriptorPool;
-		};
-
-		struct WindowData {
-			GLFWwindow * handle;
-			vk::SurfaceKHR surface;
-			vk::SurfaceFormatKHR surfaceFormat;
-			vk::PresentModeKHR presentMode;
-			vk::Extent2D surfaceExtent;
 		};
 
 		typedef VkBool32(VKAPI_PTR *PFN_vkDebugUtilsMessengerCallbackEXT)(

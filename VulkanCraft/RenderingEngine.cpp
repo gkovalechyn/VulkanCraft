@@ -8,7 +8,6 @@ static VkBool32 debugUtilCallback(
 	VkDebugUtilsMessageTypeFlagsEXT messageType,
 	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 	void* pUserData) {
-	Core::Logger::debug("Received debug util message");
 	std::stringstream stringStream;
 	stringStream << "[VK Util]" << pCallbackData->pMessageIdName << ": " << pCallbackData->pMessage;
 
@@ -50,7 +49,7 @@ void RenderingEngine::initialize(GLFWwindow * window) {
 	this->initializeVulkan();
 	this->initializeGraphicalDevice();
 
-	this->pipeline = std::make_shared<ForwardPipeline>(this->device->logicalDevice, this->window.surfaceExtent);
+	this->pipeline = std::make_shared<ForwardPipeline>(this->device->logicalDevice, this->window);
 	Core::Logger::debug("Created forward pipeline");
 
 	vk::CommandPoolCreateInfo commandPoolCreateInfo;
@@ -64,7 +63,7 @@ void RenderingEngine::initialize(GLFWwindow * window) {
 
 	this->resourceManager = std::make_unique<VulkanCraft::Graphics::ResourceManager>(*this->device, this->getDefaultPipeline()->getDescriptorSetLayout());
 
-	this->resourceManager->createModelUbo(16);
+	//this->resourceManager->createModelUbo(16);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::beginFrame() {
@@ -168,10 +167,12 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 	}
 	*/
 
+	
+
 	auto mesh = renderable.getMesh();
 	auto renderData = renderable.getRenderData();
-	
-	
+
+	/*
 	auto modelMatrix = renderable.getModelMatrix();
 	glm::mat4* aligned = (glm::mat4*) _aligned_malloc(sizeof(glm::mat4), this->resourceManager->getModelUboRequiredAlignment());
 	*aligned = modelMatrix;
@@ -180,14 +181,15 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 
 	memcpy(this->modelUboMemory, aligned , sizeof(glm::mat4));
 	this->resourceManager->flushUBOBuffer();
-	
+	*/
+
 	frame.commandBuffer.bindVertexBuffers(0, { mesh->getVertexBuffer().buffer }, { mesh->getVertexBuffer().offset });
-	frame.commandBuffer.bindIndexBuffer(mesh->getIndexBuffer().buffer, mesh->getIndexBuffer().offset, vk::IndexType::eUint32);
-	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, {this->resourceManager->getModelDescriptorSet()}, {static_cast<uint32_t>(renderData.uboIndex * this->resourceManager->getModelUboRequiredAlignment())});
+	//frame.commandBuffer.bindIndexBuffer(mesh->getIndexBuffer().buffer, mesh->getIndexBuffer().offset, vk::IndexType::eUint32);
+	//frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, {this->resourceManager->getModelDescriptorSet()}, {static_cast<uint32_t>(renderData.uboIndex * this->resourceManager->getModelUboRequiredAlignment())});
 
-	frame.commandBuffer.drawIndexed(mesh->getIndexCount(), 1, 0, 0, 0);
+	frame.commandBuffer.draw(static_cast<uint32_t>(mesh->getVertexCount()), 1, 0, 0);
 
-	_aligned_free(aligned);
+	//_aligned_free(aligned);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::endPass() {
@@ -297,7 +299,7 @@ void RenderingEngine::initializeVulkan() {
 #ifdef DEBUG
 	VkDebugUtilsMessengerCreateInfoEXT debugInfoCreateInfo;
 	debugInfoCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-	debugInfoCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
+	debugInfoCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
 	debugInfoCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 	debugInfoCreateInfo.pfnUserCallback = &debugUtilCallback;
 

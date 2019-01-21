@@ -3,11 +3,12 @@
 using namespace VulkanCraft;
 using namespace VulkanCraft::Graphics;
 
-VulkanCraft::Graphics::Mesh::Mesh(std::vector<Graphics::Vertex> vertices) : vertices(vertices){
+VulkanCraft::Graphics::Mesh::Mesh(const std::vector<Graphics::Vertex>& vertices, const std::vector<uint32_t>& indices) : vertices{ vertices }, indices { indices } {
 }
 
 VulkanCraft::Graphics::Mesh::Mesh(const tinyobj::attrib_t & attributes, const tinyobj::shape_t& shape) {
 	uint32_t i = 0;
+
 	for (const auto& index : shape.mesh.indices) {
 		Graphics::Vertex vertex;
 
@@ -35,7 +36,6 @@ VulkanCraft::Graphics::Mesh::Mesh(const tinyobj::attrib_t & attributes, const ti
 		} else {
 			vertex.uv = { 0.0f, 0.0f };
 		}
-		
 
 		vertex.color = {1.0, 1.0f, 1.0f};
 
@@ -114,7 +114,6 @@ GPUAllocation VulkanCraft::Graphics::Mesh::getVertexBuffer() const noexcept {
 GPUAllocation VulkanCraft::Graphics::Mesh::getIndexBuffer() const noexcept {
 	return this->indexBuffer;
 }
-
 
 size_t VulkanCraft::Graphics::Mesh::getIndexCount() const noexcept {
 	return this->indices.size();

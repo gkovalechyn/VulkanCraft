@@ -3,7 +3,7 @@
 using namespace VulkanCraft;
 using namespace VulkanCraft::Graphics;
 
-ForwardPipeline::ForwardPipeline(const vk::Device& logicalDevice, const vk::Extent2D viewport) : device(logicalDevice), viewport(viewport){
+ForwardPipeline::ForwardPipeline(const vk::Device& logicalDevice, const WindowData& windowData) : device(logicalDevice), windowData{ windowData }{
 	this->createShaderModules();
 	this->createLayout();
 	this->createRenderPass();
@@ -25,7 +25,7 @@ ForwardPipeline::~ForwardPipeline() {
 	Core::Logger::debug("Finished destroying forward pipeline");
 }
 
-VulkanCraft::Graphics::ForwardPipeline::ForwardPipeline(ForwardPipeline && rhs): device(rhs.device), viewport(rhs.viewport) {
+VulkanCraft::Graphics::ForwardPipeline::ForwardPipeline(ForwardPipeline && rhs): device(rhs.device), windowData (rhs.windowData) {
 	this->description = std::move(rhs.description);
 	this->shaderModules.vertex = rhs.shaderModules.vertex;
 	this->shaderModules.fragment = rhs.shaderModules.fragment;
@@ -43,11 +43,11 @@ VulkanCraft::Graphics::ForwardPipeline::ForwardPipeline(ForwardPipeline && rhs):
 }
 
 void VulkanCraft::Graphics::ForwardPipeline::setViewport(vk::Extent2D viewport) noexcept {
-	this->viewport = viewport;
+	this->windowData.surfaceExtent = viewport;
 }
 
 vk::Extent2D VulkanCraft::Graphics::ForwardPipeline::getViewport() noexcept {
-	return this->viewport;
+	return this->windowData.surfaceExtent;
 }
 
 vk::Pipeline ForwardPipeline::getHandle() {
@@ -86,18 +86,20 @@ void VulkanCraft::Graphics::ForwardPipeline::createLayout() {
 		.setSize(sizeof(glm::mat4))
 		.setOffset(0);
 
+	/*
 	vk::DescriptorSetLayoutBinding descriptorBinding0;
 	descriptorBinding0
 		.setBinding(0)
 		.setDescriptorCount(1)
 		.setDescriptorType(vk::DescriptorType::eUniformBufferDynamic)
 		.setStageFlags(vk::ShaderStageFlagBits::eVertex);
-
+	*/
 	vk::DescriptorSetLayoutCreateInfo descriptorLayoutCreateInfo;
 	descriptorLayoutCreateInfo
-		.setBindingCount(1)
-		.setPBindings(&descriptorBinding0);
+		.setBindingCount(0);
+		//.setPBindings(&descriptorBinding0);
 
+		
 	this->descriptorSetLayout = this->device.createDescriptorSetLayout(descriptorLayoutCreateInfo);
 
 	vk::PipelineLayoutCreateInfo layoutCreateInfo;
@@ -107,7 +109,6 @@ void VulkanCraft::Graphics::ForwardPipeline::createLayout() {
 		.setPushConstantRangeCount(1)
 		.setPPushConstantRanges(&pushConstants);
 		
-
 	this->layout = this->device.createPipelineLayout(layoutCreateInfo);
 }
 
@@ -116,6 +117,7 @@ void VulkanCraft::Graphics::ForwardPipeline::createRenderPass() {
 
 	vk::AttachmentDescription colorAttachment;
 	colorAttachment
+		.setFormat(this->windowData.surfaceFormat.format)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
@@ -169,10 +171,7 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 		.setModule(this->shaderModules.fragment);
 
 	//Vertex input
-	vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
-
 	vk::VertexInputBindingDescription vertexInputBindingDescription;
-
 	vertexInputBindingDescription
 		.setBinding(0)
 		.setInputRate(vk::VertexInputRate::eVertex)
@@ -210,6 +209,7 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 	vk::VertexInputAttributeDescription attributes[] = { posAttributeDescription, normalAttributeDescription, uvAttributeDescription, colorAttributeDescription };
 	vk::VertexInputBindingDescription bindings[] = { vertexInputBindingDescription };
 
+	vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
 	vertexInputStateCreateInfo
 		.setVertexAttributeDescriptionCount(4)
 		.setPVertexAttributeDescriptions(attributes)
@@ -229,20 +229,20 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 		.setY(0)
 		.setMinDepth(0)
 		.setMaxDepth(1)
-		.setWidth(static_cast<float>(this->viewport.width))
-		.setHeight(static_cast<float>(this->viewport.height));
+		.setWidth(static_cast<float>(this->windowData.surfaceExtent.width))
+		.setHeight(static_cast<float>(this->windowData.surfaceExtent.height));
 
 	vk::Rect2D scissorRect;
 	scissorRect
 		.setOffset({ 0, 0 })
-		.setExtent(this->viewport);
+		.setExtent(this->windowData.surfaceExtent);
 
 	vk::PipelineViewportStateCreateInfo viewportCreateInfo;
 	viewportCreateInfo
-		.setPScissors(&scissorRect)
 		.setScissorCount(1)
-		.setPViewports(&viewport)
-		.setViewportCount(1);
+		.setPScissors(&scissorRect)
+		.setViewportCount(1)
+		.setPViewports(&viewport);
 
 	//Rasterization
 	vk::PipelineRasterizationStateCreateInfo rasterizationCreateInfo;
@@ -308,5 +308,5 @@ vk::RenderPass VulkanCraft::Graphics::ForwardPipeline::getRenderPass() {
 }
 
 vk::Rect2D VulkanCraft::Graphics::ForwardPipeline::getRenderArea() {
-	return vk::Rect2D({ 0, 0 }, this->viewport);
+	return vk::Rect2D({ 0, 0 }, this->windowData.surfaceExtent);
 }

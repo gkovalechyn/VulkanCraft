@@ -192,6 +192,7 @@
     <ClInclude Include="Util.h" />
     <ClInclude Include="VCraft.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="WindowData.h" />
     <ClInclude Include="WireframePipeline.h" />
   </ItemGroup>
   <ItemGroup>

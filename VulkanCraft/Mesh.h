@@ -9,7 +9,7 @@ namespace VulkanCraft {
 	namespace Graphics {
 		class Mesh {
 		public:
-			Mesh(std::vector<Graphics::Vertex> vertices);
+			Mesh(const std::vector<Graphics::Vertex>& vertices, const std::vector<uint32_t>& indices);
 			Mesh(const tinyobj::attrib_t& attributes, const tinyobj::shape_t& shape);
 			virtual ~Mesh();
 			
