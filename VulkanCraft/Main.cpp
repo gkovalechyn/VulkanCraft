@@ -35,6 +35,8 @@ int main(int argc, char* argv[]) {
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
+		resourceManager->updateTransfers();
+
 		renderingEngine->beginFrame();
 		renderingEngine->beginPass(*defaultPipeline, camera);
 

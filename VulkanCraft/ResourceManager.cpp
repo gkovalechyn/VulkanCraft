@@ -5,8 +5,8 @@ using namespace VulkanCraft::Graphics;
 
 VulkanCraft::Graphics::ResourceManager::ResourceManager(const GraphicalDevice& device, vk::DescriptorSetLayout pipelineLayout) : device{ &device }, layout { pipelineLayout } {
 	VmaAllocatorCreateInfo allocatorCreateInfo = {};
-	allocatorCreateInfo.device = device.logicalDevice;
-	allocatorCreateInfo.physicalDevice = device.physicalDevice;
+	allocatorCreateInfo.device = (VkDevice) device.logicalDevice;
+	allocatorCreateInfo.physicalDevice = (VkPhysicalDevice) device.physicalDevice;
 
 	auto result = vmaCreateAllocator(&allocatorCreateInfo, &(this->vma));
 
@@ -92,6 +92,7 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 	GPUAllocation stagingAllocation = this->stagingBufferManager->allocateMemory(size);
 	VmaAllocation vmaAllocation = this->stagingBufferManager->getBufferAllocation();
 	
+	Core::Logger::vaLog(Core::LogLevel::eDebug, "Allocated block from staging buffer, id: %d, offset: %d, size: %d", stagingAllocation.id, stagingAllocation.offset, stagingAllocation.size);
 	memcpy(((uint8_t*) this->mappedStagingBuffer) + stagingAllocation.offset, data, size);
 
 	vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
@@ -124,6 +125,8 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 		.setSrcOffset(stagingAllocation.offset)
 		.setDstOffset(to.offset);
 
+	Core::Logger::vaLog(Core::LogLevel::eDebug, "Copy %d byte region from %d to %d", copyRegion.size, copyRegion.srcOffset, copyRegion.dstOffset);
+
 	transfer.commandBuffer.copyBuffer(transfer.from, transfer.to, { copyRegion });
 	transfer.commandBuffer.end();
 
@@ -134,12 +137,16 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 		.setSignalSemaphoreCount(1)
 		.setPSignalSemaphores(&transfer.doneSemaphore);
 
+	Core::Logger::debug("Submitting copy command to the queue");
+
 	this->device->graphicsQueue.submit(submitInfo, transfer.doneFence);
 	auto future = transfer.promise.get_future();
 
 	if (important) {
+		Core::Logger::debug("Pushing copy to the important transfer queue");
 		this->pendingImportantTransfers.push_back(std::move(transfer));
 	} else {
+		Core::Logger::debug("Pushing copy to the normal transfer queue");
 		this->pendingTransfers.push_back(std::move(transfer));
 	}
 
@@ -147,14 +154,17 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 }
 
 void VulkanCraft::Graphics::ResourceManager::uploadMeshToGPU(Mesh & mesh) {
-
 	GPUAllocation vertexAllocation = this->vertexBufferManager->allocateMemory(sizeof(Vertex) * mesh.getVertexCount());
-	GPUAllocation indexAllocation = this->indexBufferManager->allocateMemory(sizeof(uint32_t) * mesh.getVertexCount());
+	Core::Logger::vaLog(Core::LogLevel::eDebug, "Allocated vertex buffer %d at %d with size %d", vertexAllocation.id, vertexAllocation.offset, vertexAllocation.size);
+	GPUAllocation indexAllocation = this->indexBufferManager->allocateMemory(sizeof(uint32_t) * mesh.getIndexCount());
+	Core::Logger::vaLog(Core::LogLevel::eDebug, "Allocated index buffer %d at %d with size %d", indexAllocation.id, indexAllocation.offset, indexAllocation.size);
 
 	mesh.setVertexBuffer(vertexAllocation);
 	mesh.setIndexBuffer(indexAllocation);
 
+	Core::Logger::debug("Pushing vertex buffer to the GPU");
 	this->pushDataToGPUBuffer(mesh.getVertices().data(), mesh.getVertices().size() * sizeof(Vertex), vertexAllocation, true);
+	Core::Logger::debug("Pushing index buffer to the GPU");
 	this->pushDataToGPUBuffer(mesh.getIndices().data(), mesh.getIndices().size() * sizeof(uint32_t), indexAllocation, true);
 }
 
@@ -173,25 +183,59 @@ const std::vector<PendingMemoryTransfer>& VulkanCraft::Graphics::ResourceManager
 
 void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
 	//TODO find a way that doesn't require copying the loop for both vectors
+
+	std::vector<PendingMemoryTransfer> newImportantList;
 	for (auto it = this->pendingImportantTransfers.rbegin(); it != this->pendingImportantTransfers.rend(); it++) {
 		auto& pendingTransfer = *it;
 		auto fenceStatus = this->device->logicalDevice.getFenceStatus(pendingTransfer.doneFence);
 
 		if (fenceStatus == vk::Result::eSuccess) {
 			pendingTransfer.promise.set_value();
-			this->pendingImportantTransfers.erase(it.base());
+
+			Core::Logger::vaLog(
+				Core::LogLevel::eDebug,
+				"Important memory transfer of %d bytes finished: from %d:%d to %d:%d",
+				pendingTransfer.size,
+				pendingTransfer.from,
+				pendingTransfer.fromOffset,
+				pendingTransfer.to,
+				pendingTransfer.toOffset
+			);
+
+			//this->pendingImportantTransfers.erase(std::next(it).base());
+		} else {
+			newImportantList.push_back(std::move(pendingTransfer));
 		}
 	}
 
+	this->pendingImportantTransfers = std::move(newImportantList);
+
+	std::vector<PendingMemoryTransfer> newPendingList;
 	for (auto it = this->pendingTransfers.rbegin(); it != this->pendingTransfers.rend(); it++) {
 		auto& pendingTransfer = *it;
 		auto fenceStatus = this->device->logicalDevice.getFenceStatus(pendingTransfer.doneFence);
 
 		if (fenceStatus == vk::Result::eSuccess) {
 			pendingTransfer.promise.set_value();
-			this->pendingTransfers.erase(it.base());
+
+			Core::Logger::vaLog(
+				Core::LogLevel::eDebug,
+				"Normal memory transfer of %d bytes finished: from %d:%d to %d:%d",
+				pendingTransfer.size,
+				pendingTransfer.from,
+				pendingTransfer.fromOffset,
+				pendingTransfer.to,
+				pendingTransfer.toOffset
+			);
+
+			//std::advance(it, 1);
+			//this->pendingTransfers.erase(std::next(it).base());
+		} else {
+			newPendingList.push_back(std::move(pendingTransfer));
 		}
 	}
+
+	this->pendingTransfers = std::move(newPendingList);
 }
 
 void VulkanCraft::Graphics::ResourceManager::createModelUbo(const uint32_t maxModelCount) {

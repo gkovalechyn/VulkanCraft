@@ -10,7 +10,7 @@ layout(set = 0, binding = 0) uniform ModelData {
     mat4 model;
 } model;
 
-layout(push_constant) uniform CameraConstants{
+layout(push_constant) uniform CameraConstants {
     mat4 viewAndProjection;
 } camera;
 

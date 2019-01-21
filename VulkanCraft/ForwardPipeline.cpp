@@ -83,7 +83,7 @@ void VulkanCraft::Graphics::ForwardPipeline::createLayout() {
 	vk::PushConstantRange pushConstants;
 	pushConstants
 		.setStageFlags(vk::ShaderStageFlagBits::eVertex)
-		.setSize(sizeof(glm::mat4x4))
+		.setSize(sizeof(glm::mat4))
 		.setOffset(0);
 
 	vk::DescriptorSetLayoutBinding descriptorBinding0;
@@ -211,10 +211,11 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 	vk::VertexInputBindingDescription bindings[] = { vertexInputBindingDescription };
 
 	vertexInputStateCreateInfo
+		.setVertexAttributeDescriptionCount(4)
 		.setPVertexAttributeDescriptions(attributes)
-		.setVertexAttributeDescriptionCount(2)
-		.setPVertexBindingDescriptions(bindings)
-		.setVertexBindingDescriptionCount(1);
+
+		.setVertexBindingDescriptionCount(1)
+		.setPVertexBindingDescriptions(bindings);
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
 	inputAssemblyInfo
@@ -309,27 +310,3 @@ vk::RenderPass VulkanCraft::Graphics::ForwardPipeline::getRenderPass() {
 vk::Rect2D VulkanCraft::Graphics::ForwardPipeline::getRenderArea() {
 	return vk::Rect2D({ 0, 0 }, this->viewport);
 }
-
-/*
-std::unique_ptr<ForwardPipeline> VulkanCraft::Graphics::ForwardPipeline::fromConfiguration(nlohmann::json file) {
-	auto pipelinePtr = std::make_unique<ForwardPipeline>();
-
-	pipelinePtr->description = file["description"].get<std::string>();
-
-	if (file.find("shaders") == file.end()) {
-		throw Core::ConfigurationError("Pipeline configuration file is missing shaders object");
-	}
-
-	auto shadersObject = file["shaders"];
-
-	if (shadersObject.find("vertex") == shadersObject.end()) {
-		throw Core::ConfigurationError("Shaders object is missing the vertex stage");
-	}
-
-	if (shadersObject.find("fragment") == shadersObject.end()) {
-		throw Core::ConfigurationError("Shaders object is missing the fragment stage");
-	}
-
-	return pipelinePtr;
-}
-*/

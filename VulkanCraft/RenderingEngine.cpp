@@ -12,7 +12,10 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	const char* layerPrefix,
 	const char* msg,
 	void* userData) {
-	Core::Logger::debug(std::string(layerPrefix) + ": " + msg);
+	std::stringstream stringStream;
+	stringStream << "[VK]" << layerPrefix << ": " << msg;
+
+	Core::Logger::debug(stringStream.str());
 	//Core::Logger::vaLog(Core::LogLevel::eDebug, "%s: %s", std::string(layerPrefix), msg);
 
 	return VK_FALSE;
@@ -182,7 +185,7 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 	frame.commandBuffer.bindIndexBuffer(mesh->getIndexBuffer().buffer, mesh->getIndexBuffer().offset, vk::IndexType::eUint32);
 	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, {this->resourceManager->getModelDescriptorSet()}, {renderData.uboIndex});
 
-	frame.commandBuffer.drawIndexed(static_cast<uint32_t>(mesh->getVertices().size()), 1, 0, 0, 0);
+	frame.commandBuffer.drawIndexed(static_cast<uint32_t>(1), 1, 0, 0, 0);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::endPass() {
@@ -197,8 +200,8 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame(const std::vector<PendingM
 	frame.commandBuffer.end();
 
 	//One for each transfer that needs to finish and 1 more for the image available semaphore
-	std::vector<vk::PipelineStageFlags> waitStages(pendingTransfers.size() + 1);
-	std::vector<vk::Semaphore> waitSemaphores(pendingTransfers.size() + 1);
+	std::vector<vk::PipelineStageFlags> waitStages;
+	std::vector<vk::Semaphore> waitSemaphores;
 
 	uint32_t imageIndex = this->device->logicalDevice.acquireNextImageKHR(this->swapchain->handle, std::numeric_limits<uint64_t>::max(), frame.imageAvailableSemaphore, nullptr).value;
 
@@ -292,7 +295,7 @@ void RenderingEngine::initializeVulkan() {
 #ifdef DEBUG
 	VkDebugReportCallbackCreateInfoEXT  debugCreateInfo;
 	debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-	debugCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+	debugCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
 	debugCreateInfo.pfnCallback = &debugCallback;
 
 	PFN_vkCreateDebugReportCallbackEXT createDebugReportCallbackFunction = (PFN_vkCreateDebugReportCallbackEXT)this->vkInstance.getProcAddr("vkCreateDebugReportCallbackEXT");
@@ -309,8 +312,8 @@ void RenderingEngine::initializeVulkan() {
 
 void VulkanCraft::Graphics::RenderingEngine::initializeGraphicalDevice() {
 	VkSurfaceKHR surface;
-	glfwCreateWindowSurface(this->vkInstance, this->window.handle, nullptr, &surface);
-	this->window.surface = surface;
+	glfwCreateWindowSurface((VkInstance) this->vkInstance, this->window.handle, nullptr, &surface);
+	this->window.surface = vk::SurfaceKHR(surface);
 
 	std::vector<const char*> requiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
@@ -383,7 +386,7 @@ void VulkanCraft::Graphics::RenderingEngine::createPerFrameData() {
 
 	vk::DescriptorPoolSize poolSize;
 	poolSize
-		.setDescriptorCount(2048)
+		.setDescriptorCount(16)
 		.setType(vk::DescriptorType::eStorageBuffer);
 
 	vk::DescriptorPoolCreateInfo createInfo;
