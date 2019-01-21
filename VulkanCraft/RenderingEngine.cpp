@@ -243,9 +243,13 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame(const std::vector<PendingM
 
 	this->resourceManager->unmapModelDynamicUbo();
 
-	std::stringstream newTitle;
-	newTitle << "VulkanCraft frame " << this->currentFrame;
-	glfwSetWindowTitle(this->window.handle, newTitle.str().c_str());
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	float timePassed = std::chrono::duration<float, std::chrono::milliseconds::period>(currentTime - this->lastFrameTimestamp).count();
+	auto nowFPS = 1000 / timePassed;
+
+	this->frameTime = timePassed;
+	this->fps = (this->fps * 0.99) + (nowFPS * 0.01);
+	this->lastFrameTimestamp = currentTime;
 }
 
 GraphicalDevice * VulkanCraft::Graphics::RenderingEngine::getDevice() {
@@ -258,6 +262,14 @@ ResourceManager * VulkanCraft::Graphics::RenderingEngine::getResourceManager() {
 
 std::shared_ptr<GraphicsPipeline> VulkanCraft::Graphics::RenderingEngine::getDefaultPipeline() noexcept {
 	return this->pipeline;
+}
+
+float VulkanCraft::Graphics::RenderingEngine::getFPS() {
+	return this->fps;
+}
+
+float VulkanCraft::Graphics::RenderingEngine::getFrameTime() {
+	return this->frameTime;
 }
 
 void RenderingEngine::initializeVulkan() {

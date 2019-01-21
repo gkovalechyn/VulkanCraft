@@ -246,8 +246,8 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 	//Rasterization
 	vk::PipelineRasterizationStateCreateInfo rasterizationCreateInfo;
 	rasterizationCreateInfo
-		.setCullMode(vk::CullModeFlagBits::eNone)
-		.setFrontFace(vk::FrontFace::eClockwise)
+		.setCullMode(vk::CullModeFlagBits::eBack)
+		.setFrontFace(vk::FrontFace::eCounterClockwise)
 		.setDepthClampEnable(false)
 		.setPolygonMode(vk::PolygonMode::eFill)
 

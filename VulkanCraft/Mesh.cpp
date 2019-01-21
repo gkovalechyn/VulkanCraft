@@ -18,7 +18,7 @@ VulkanCraft::Graphics::Mesh::Mesh(const tinyobj::attrib_t & attributes, const ti
 			attributes.vertices[index.vertex_index * 3 + 2]
 		};
 
-		if (attributes.normals.size() > 0) {
+		if (attributes.normals.size() > index.normal_index) {
 			vertex.normal = {
 				attributes.normals[index.normal_index * 3 + 0],
 				attributes.normals[index.normal_index * 3 + 1],
@@ -28,7 +28,7 @@ VulkanCraft::Graphics::Mesh::Mesh(const tinyobj::attrib_t & attributes, const ti
 			vertex.normal = { 0.0f, 0.0f, 0.0f };
 		}
 		
-		if (attributes.texcoords.size() > 0) {
+		if (attributes.texcoords.size() > index.texcoord_index) {
 			vertex.uv = {
 				attributes.texcoords[index.texcoord_index * 2 + 0],
 				attributes.texcoords[index.texcoord_index * 2 + 1]

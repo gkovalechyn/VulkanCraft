@@ -57,6 +57,9 @@ namespace VulkanCraft {
 
 			void registerPipeline(std::string name, GraphicsPipeline* pipeline);
 			std::shared_ptr<GraphicsPipeline> getDefaultPipeline() noexcept;
+
+			float getFPS();
+			float getFrameTime();
 		private:
 			vk::Instance vkInstance;
 			VkDebugUtilsMessengerEXT debugMessenger;
@@ -74,6 +77,9 @@ namespace VulkanCraft {
 
 			std::vector<PerFrameData> frames;
 			int currentFrame = 0;
+			float fps = 0.0f;
+			float frameTime = 0.0f;
+			std::chrono::time_point<std::chrono::high_resolution_clock> lastFrameTimestamp;
 
 #ifdef DEBUG
 			std::vector<const char*> requiredLayers = { "VK_LAYER_LUNARG_standard_validation"};

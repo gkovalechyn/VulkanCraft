@@ -21,7 +21,7 @@ out gl_PerVertex {
 };
 
 void main() {
-    //gl_Position = camera.viewAndProjection * model.model * vec4(position, 1.0);
-    gl_Position = vec4(position, 1.0);
-    fragColor = vec3(1.0, 1.0, 1.0);
+    gl_Position = camera.viewAndProjection * model.model * vec4(position, 1.0);
+    //gl_Position = vec4(position, 1.0);
+    fragColor = abs(normal);
 }
