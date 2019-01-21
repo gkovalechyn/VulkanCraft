@@ -180,12 +180,15 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 
 	renderData.uboIndex = 0;
 	memcpy(this->modelUboMemory, &modelMatrix, sizeof(glm::mat4));
+	//this->resourceManager->unmapModelDynamicUbo();
+	this->resourceManager->flushUBOBuffer();
+	//this->resourceManager->mapModelDynamicUbo(&this->modelUboMemory);
 
 	frame.commandBuffer.bindVertexBuffers(0, { mesh->getVertexBuffer().buffer }, { mesh->getVertexBuffer().offset });
 	frame.commandBuffer.bindIndexBuffer(mesh->getIndexBuffer().buffer, mesh->getIndexBuffer().offset, vk::IndexType::eUint32);
 	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, {this->resourceManager->getModelDescriptorSet()}, {renderData.uboIndex});
 
-	frame.commandBuffer.drawIndexed(static_cast<uint32_t>(1), 1, 0, 0, 0);
+	frame.commandBuffer.drawIndexed(static_cast<uint32_t>(mesh->getIndexCount()), 1, 0, 0, 0);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::endPass() {

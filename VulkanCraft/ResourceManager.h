@@ -58,8 +58,8 @@ namespace VulkanCraft {
 			void unmapModelDynamicUbo();
 
 			uint64_t getModelUboRequiredAlignment();
-
 			vk::DescriptorSet getModelDescriptorSet();
+			void flushUBOBuffer();
 		private:
 			const GraphicalDevice* device;
 			vk::CommandPool commandPool;

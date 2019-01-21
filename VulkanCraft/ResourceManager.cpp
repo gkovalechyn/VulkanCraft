@@ -90,7 +90,7 @@ void VulkanCraft::Graphics::ResourceManager::unmapAllocation(const VmaAllocation
 
 std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(const void * data, const uint64_t size, const GPUAllocation& to, const bool important) {
 	GPUAllocation stagingAllocation = this->stagingBufferManager->allocateMemory(size);
-	VmaAllocation vmaAllocation = this->stagingBufferManager->getBufferAllocation();
+	//VmaAllocation vmaAllocation = this->stagingBufferManager->getBufferAllocation();
 	
 	Core::Logger::vaLog(Core::LogLevel::eDebug, "Allocated block from staging buffer, id: %d, offset: %d, size: %d", stagingAllocation.id, stagingAllocation.offset, stagingAllocation.size);
 	memcpy(((uint8_t*) this->mappedStagingBuffer) + stagingAllocation.offset, data, size);
@@ -104,11 +104,12 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 	PendingMemoryTransfer transfer = {};
 	transfer.freeFromBuffer = false;
 	transfer.from = this->stagingBufferManager->getManagedBuffer();
-	transfer.fromAllocation = vmaAllocation;
+	//transfer.fromAllocation = vmaAllocation;
 	transfer.fromOffset = stagingAllocation.offset;
 
 	transfer.to = to.buffer;
 	transfer.toOffset = to.offset;
+	transfer.size = size;
 
 	transfer.doneFence = this->device->logicalDevice.createFence({});
 	transfer.doneSemaphore = this->device->logicalDevice.createSemaphore({});
@@ -202,6 +203,10 @@ void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
 				pendingTransfer.toOffset
 			);
 
+			this->device->logicalDevice.destroyFence(pendingTransfer.doneFence);
+			this->device->logicalDevice.destroySemaphore(pendingTransfer.doneSemaphore);
+			this->device->logicalDevice.freeCommandBuffers(this->commandPool, { pendingTransfer.commandBuffer });
+
 			//this->pendingImportantTransfers.erase(std::next(it).base());
 		} else {
 			newImportantList.push_back(std::move(pendingTransfer));
@@ -227,6 +232,8 @@ void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
 				pendingTransfer.to,
 				pendingTransfer.toOffset
 			);
+
+			//TODO Free allocated resources
 
 			//std::advance(it, 1);
 			//this->pendingTransfers.erase(std::next(it).base());
@@ -314,3 +321,7 @@ uint64_t VulkanCraft::Graphics::ResourceManager::getModelUboRequiredAlignment() 
 vk::DescriptorSet VulkanCraft::Graphics::ResourceManager::getModelDescriptorSet() {
 	return this->modelDescriptorSet;
 }
+
+void VulkanCraft::Graphics::ResourceManager::flushUBOBuffer() {
+	vmaFlushAllocation(this->vma, this->modelUboAllocation, 0, VK_WHOLE_SIZE);
+}	
