@@ -16,6 +16,7 @@
 #include "ResourceManager.h"
 #include "RenderData.h"
 #include <sstream>
+#include <corecrt_malloc.h>
 
 namespace VulkanCraft {
 	namespace Graphics {

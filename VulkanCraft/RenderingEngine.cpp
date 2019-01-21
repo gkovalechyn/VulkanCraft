@@ -177,18 +177,20 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 	auto renderData = renderable.getRenderData();
 	
 	auto modelMatrix = renderable.getModelMatrix();
+	glm::mat4* aligned = (glm::mat4*) _aligned_malloc(sizeof(glm::mat4), this->resourceManager->getModelUboRequiredAlignment());
+	*aligned = modelMatrix;
 
 	renderData.uboIndex = 0;
-	memcpy(this->modelUboMemory, &modelMatrix, sizeof(glm::mat4));
-	//this->resourceManager->unmapModelDynamicUbo();
+
+	memcpy(this->modelUboMemory, aligned , sizeof(glm::mat4));
 	this->resourceManager->flushUBOBuffer();
-	//this->resourceManager->mapModelDynamicUbo(&this->modelUboMemory);
 
 	frame.commandBuffer.bindVertexBuffers(0, { mesh->getVertexBuffer().buffer }, { mesh->getVertexBuffer().offset });
 	frame.commandBuffer.bindIndexBuffer(mesh->getIndexBuffer().buffer, mesh->getIndexBuffer().offset, vk::IndexType::eUint32);
-	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, {this->resourceManager->getModelDescriptorSet()}, {renderData.uboIndex});
+	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, {this->resourceManager->getModelDescriptorSet()}, {static_cast<uint32_t>(renderData.uboIndex * this->resourceManager->getModelUboRequiredAlignment())});
 
 	frame.commandBuffer.drawIndexed(static_cast<uint32_t>(mesh->getIndexCount()), 1, 0, 0, 0);
+	_aligned_free(aligned);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::endPass() {
