@@ -310,11 +310,11 @@ void VulkanCraft::Graphics::ResourceManager::createModelUbo(const uint32_t maxMo
 }
 
 void VulkanCraft::Graphics::ResourceManager::mapModelDynamicUbo(void ** ptr) {
-	//vmaMapMemory(this->vma, this->modelUboAllocation, ptr);
+	vmaMapMemory(this->vma, this->modelUboAllocation, ptr);
 }
 
 void VulkanCraft::Graphics::ResourceManager::unmapModelDynamicUbo() {
-	//vmaUnmapMemory(this->vma, this->modelUboAllocation);
+	vmaUnmapMemory(this->vma, this->modelUboAllocation);
 }
 
 uint64_t VulkanCraft::Graphics::ResourceManager::getModelUboRequiredAlignment() {

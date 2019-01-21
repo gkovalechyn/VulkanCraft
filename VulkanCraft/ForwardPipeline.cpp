@@ -51,7 +51,7 @@ vk::Extent2D VulkanCraft::Graphics::ForwardPipeline::getViewport() noexcept {
 }
 
 vk::Pipeline ForwardPipeline::getHandle() {
-	return vk::Pipeline();
+	return this->handle;
 }
 
 void ForwardPipeline::recreate() {
@@ -86,18 +86,18 @@ void VulkanCraft::Graphics::ForwardPipeline::createLayout() {
 		.setSize(sizeof(glm::mat4))
 		.setOffset(0);
 
-	/*
+	
 	vk::DescriptorSetLayoutBinding descriptorBinding0;
 	descriptorBinding0
 		.setBinding(0)
 		.setDescriptorCount(1)
 		.setDescriptorType(vk::DescriptorType::eUniformBufferDynamic)
 		.setStageFlags(vk::ShaderStageFlagBits::eVertex);
-	*/
+	
 	vk::DescriptorSetLayoutCreateInfo descriptorLayoutCreateInfo;
 	descriptorLayoutCreateInfo
-		.setBindingCount(0);
-		//.setPBindings(&descriptorBinding0);
+		.setBindingCount(1)
+		.setPBindings(&descriptorBinding0);
 
 		
 	this->descriptorSetLayout = this->device.createDescriptorSetLayout(descriptorLayoutCreateInfo);
@@ -114,7 +114,6 @@ void VulkanCraft::Graphics::ForwardPipeline::createLayout() {
 
 void VulkanCraft::Graphics::ForwardPipeline::createRenderPass() {
 	
-
 	vk::AttachmentDescription colorAttachment;
 	colorAttachment
 		.setFormat(this->windowData.surfaceFormat.format)
@@ -247,7 +246,7 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 	//Rasterization
 	vk::PipelineRasterizationStateCreateInfo rasterizationCreateInfo;
 	rasterizationCreateInfo
-		.setCullMode(vk::CullModeFlagBits::eBack)
+		.setCullMode(vk::CullModeFlagBits::eNone)
 		.setFrontFace(vk::FrontFace::eClockwise)
 		.setDepthClampEnable(false)
 		.setPolygonMode(vk::PolygonMode::eFill)

@@ -9,7 +9,7 @@ static VkBool32 debugUtilCallback(
 	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 	void* pUserData) {
 	std::stringstream stringStream;
-	stringStream << "[VK Util]" << pCallbackData->pMessageIdName << ": " << pCallbackData->pMessage;
+	stringStream << "[VK]" << pCallbackData->pMessageIdName << ": " << pCallbackData->pMessage;
 
 	Core::Logger::debug(stringStream.str());
 
@@ -63,7 +63,7 @@ void RenderingEngine::initialize(GLFWwindow * window) {
 
 	this->resourceManager = std::make_unique<VulkanCraft::Graphics::ResourceManager>(*this->device, this->getDefaultPipeline()->getDescriptorSetLayout());
 
-	//this->resourceManager->createModelUbo(16);
+	this->resourceManager->createModelUbo(128);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::beginFrame() {
@@ -172,7 +172,7 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 	auto mesh = renderable.getMesh();
 	auto renderData = renderable.getRenderData();
 
-	/*
+	
 	auto modelMatrix = renderable.getModelMatrix();
 	glm::mat4* aligned = (glm::mat4*) _aligned_malloc(sizeof(glm::mat4), this->resourceManager->getModelUboRequiredAlignment());
 	*aligned = modelMatrix;
@@ -181,15 +181,15 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 
 	memcpy(this->modelUboMemory, aligned , sizeof(glm::mat4));
 	this->resourceManager->flushUBOBuffer();
-	*/
+	
 
 	frame.commandBuffer.bindVertexBuffers(0, { mesh->getVertexBuffer().buffer }, { mesh->getVertexBuffer().offset });
-	//frame.commandBuffer.bindIndexBuffer(mesh->getIndexBuffer().buffer, mesh->getIndexBuffer().offset, vk::IndexType::eUint32);
-	//frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, {this->resourceManager->getModelDescriptorSet()}, {static_cast<uint32_t>(renderData.uboIndex * this->resourceManager->getModelUboRequiredAlignment())});
+	frame.commandBuffer.bindIndexBuffer(mesh->getIndexBuffer().buffer, mesh->getIndexBuffer().offset, vk::IndexType::eUint32);
+	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, {this->resourceManager->getModelDescriptorSet()}, {static_cast<uint32_t>(renderData.uboIndex * this->resourceManager->getModelUboRequiredAlignment())});
 
-	frame.commandBuffer.draw(static_cast<uint32_t>(mesh->getVertexCount()), 1, 0, 0);
+	frame.commandBuffer.drawIndexed(static_cast<uint32_t>(mesh->getIndexCount()), 1, 0, 0, 0);
 
-	//_aligned_free(aligned);
+	_aligned_free(aligned);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::endPass() {
@@ -227,13 +227,14 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame(const std::vector<PendingM
 		.setSignalSemaphoreCount(1)
 		.setPSignalSemaphores(&frame.renderingDoneSemaphore);
 
+	//Submit
 	this->device->graphicsQueue.submit(submitInfo, frame.inFlightFence);
 
 	vk::PresentInfoKHR presentInfo;
 
 	presentInfo
 		.setWaitSemaphoreCount(1)
-		.setPWaitSemaphores(&frame.imageAvailableSemaphore)
+		.setPWaitSemaphores(&frame.renderingDoneSemaphore)
 		.setSwapchainCount(1)
 		.setPSwapchains(&this->swapchain->handle)
 		.setPImageIndices(&imageIndex);
@@ -273,8 +274,7 @@ void RenderingEngine::initializeVulkan() {
 	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
 #ifdef DEBUG
-	extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-	extensions.push_back("VK_EXT_debug_utils");
+	extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif // DEBUG
 	for (const auto& layerProperty : vk::enumerateInstanceLayerProperties()) {
 		Core::Logger::vaLog(Core::LogLevel::eDebug, "Available layer: %s, spec %d", layerProperty.layerName, layerProperty.specVersion);
@@ -290,9 +290,16 @@ void RenderingEngine::initializeVulkan() {
 		.setPpEnabledExtensionNames(extensions.data());
 
 #ifdef DEBUG
-	createInfo.setEnabledLayerCount((uint32_t)requiredLayers.size())
+	createInfo
+		.setEnabledLayerCount(static_cast<uint32_t>(requiredLayers.size()))
 		.setPpEnabledLayerNames(requiredLayers.data());
 #endif
+
+	Core::Logger::debug("Enabling layers:");
+	for (const auto& layer : this->requiredLayers) {
+		Core::Logger::vaLog(Core::LogLevel::eDebug, "\t- %s", layer);
+	}
+
 
 	this->vkInstance = vk::createInstance(createInfo, nullptr);
 
@@ -300,7 +307,8 @@ void RenderingEngine::initializeVulkan() {
 	VkDebugUtilsMessengerCreateInfoEXT debugInfoCreateInfo;
 	debugInfoCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 	debugInfoCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
-	debugInfoCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	debugInfoCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+
 	debugInfoCreateInfo.pfnUserCallback = &debugUtilCallback;
 
 	auto createDebugUtilsFunc = (PFN_vkCreateDebugUtilsMessengerEXT)this->vkInstance.getProcAddr("vkCreateDebugUtilsMessengerEXT");
@@ -392,7 +400,8 @@ void VulkanCraft::Graphics::RenderingEngine::createPerFrameData() {
 	createInfo
 		.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
 		.setPoolSizeCount(1)
-		.setPPoolSizes(&poolSize);
+		.setPPoolSizes(&poolSize)
+		.setMaxSets(1);
 
 
 

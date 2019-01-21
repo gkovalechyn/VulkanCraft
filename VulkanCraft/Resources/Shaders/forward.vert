@@ -10,14 +10,18 @@ layout(push_constant) uniform CameraConstants {
     mat4 viewAndProjection;
 } camera;
 
-layout(location = 0) out vec4 fragColor;
+layout(set = 0, binding = 0) uniform ModelData {
+    mat4 model;
+} model;
+
+layout(location = 0) out vec3 fragColor;
 
 out gl_PerVertex {
     vec4 gl_Position;
 };
 
 void main() {
-    gl_Position = camera.viewAndProjection * vec4(position, 1.0);
-
-    fragColor = vec4(inColor, 1.0);
+    //gl_Position = camera.viewAndProjection * model.model * vec4(position, 1.0);
+    gl_Position = vec4(position, 1.0);
+    fragColor = vec3(1.0, 1.0, 1.0);
 }

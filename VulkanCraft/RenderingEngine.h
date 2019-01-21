@@ -34,7 +34,8 @@ namespace VulkanCraft {
 			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 			VkDebugUtilsMessageTypeFlagsEXT messageType,
 			const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-			void* pUserData);
+			void* pUserData);
+
 
 		class RenderingEngine {
 		public:
