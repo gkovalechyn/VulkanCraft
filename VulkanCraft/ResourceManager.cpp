@@ -17,23 +17,23 @@ VulkanCraft::Graphics::ResourceManager::ResourceManager(const GraphicalDevice& d
 	this->commandPool = device.logicalDevice.createCommandPool(createInfo);
 
 	VkBuffer vertexBufferHandle;
-	auto vertexAllocation = this->allocateVertexBuffer(64 * 1024, &vertexBufferHandle);
+	auto vertexAllocation = this->allocateVertexBuffer(4 * 1024 * 1024, &vertexBufferHandle);
 	VmaAllocationInfo info;
 	vmaGetAllocationInfo(this->vma, vertexAllocation, &info);
 	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(vertexBufferHandle), vertexAllocation, info);
 
 	VkBuffer indexBufferHandle;
-	auto indexAllocation = this->allocateIndexBuffer(64 * 1024, &indexBufferHandle);
+	auto indexAllocation = this->allocateIndexBuffer(4 * 1024 * 1024, &indexBufferHandle);
 	vmaGetAllocationInfo(this->vma, indexAllocation, &info);
 	this->indexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(indexBufferHandle), indexAllocation, info);
 
 	VkBuffer uboBufferHandle;
-	auto uboAllocation = this->allocateBuffer(128 * 1024, &uboBufferHandle, vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY);
+	auto uboAllocation = this->allocateBuffer(4 * 1024 * 1024, &uboBufferHandle, vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY);
 	vmaGetAllocationInfo(this->vma, uboAllocation, &info);
 	this->uboBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(uboBufferHandle), uboAllocation, info);
 
 	VkBuffer stagingBufferHandle;
-	auto stagingAllocation = this->allocateStagingBuffer(64 * 1024, &stagingBufferHandle);
+	auto stagingAllocation = this->allocateStagingBuffer(16 * 1024 * 1024, &stagingBufferHandle);
 	vmaGetAllocationInfo(this->vma, stagingAllocation, &info);
 	this->stagingBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(stagingBufferHandle), stagingAllocation, info);
 
@@ -45,18 +45,18 @@ VulkanCraft::Graphics::ResourceManager::~ResourceManager() {
 }
 
 VmaAllocation VulkanCraft::Graphics::ResourceManager::allocateVertexBuffer(uint64_t sizeInBytes, VkBuffer* outHandle) {
-	return this->allocateBuffer(sizeInBytes, outHandle, vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY);
+	return this->allocateBuffer(sizeInBytes, outHandle, vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY, VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT);
 }
 
 VmaAllocation VulkanCraft::Graphics::ResourceManager::allocateIndexBuffer(uint64_t sizeInBytes, VkBuffer* outHandle) {
-	return this->allocateBuffer(sizeInBytes, outHandle, vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY);
+	return this->allocateBuffer(sizeInBytes, outHandle, vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY, VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT);
 }
 
 VmaAllocation VulkanCraft::Graphics::ResourceManager::allocateStagingBuffer(uint64_t sizeInBytes, VkBuffer * outHandle) {
 	return this->allocateBuffer(sizeInBytes, outHandle, vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst, VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU);
 }
 
-VmaAllocation VulkanCraft::Graphics::ResourceManager::allocateBuffer(uint64_t sizeInBytes, VkBuffer * outHandle, vk::BufferUsageFlags usageFlags, VmaMemoryUsage usage) {
+VmaAllocation VulkanCraft::Graphics::ResourceManager::allocateBuffer(uint64_t sizeInBytes, VkBuffer * outHandle, vk::BufferUsageFlags usageFlags, VmaMemoryUsage usage, VmaAllocationCreateFlags allocationFlags) {
 	vk::BufferCreateInfo bufferCreateInfo = {};
 	bufferCreateInfo
 		.setSize(sizeInBytes)
@@ -64,6 +64,7 @@ VmaAllocation VulkanCraft::Graphics::ResourceManager::allocateBuffer(uint64_t si
 
 	VmaAllocationCreateInfo allocationCreateInfo = {};
 	allocationCreateInfo.usage = usage;
+	allocationCreateInfo.flags = allocationFlags;
 
 	VmaAllocation allocation;
 	VkBufferCreateInfo proxy = bufferCreateInfo;
@@ -93,7 +94,9 @@ std::future<void> VulkanCraft::Graphics::ResourceManager::pushDataToGPUBuffer(co
 	//VmaAllocation vmaAllocation = this->stagingBufferManager->getBufferAllocation();
 	
 	Core::Logger::vaLog(Core::LogLevel::eDebug, "Allocated block from staging buffer, id: %d, offset: %d, size: %d", stagingAllocation.id, stagingAllocation.offset, stagingAllocation.size);
-	memcpy(((uint8_t*) this->mappedStagingBuffer) + stagingAllocation.offset, data, size);
+	uint8_t* stagingDataPtr = ((uint8_t*)this->mappedStagingBuffer) + stagingAllocation.offset;
+
+	memcpy(stagingDataPtr, data, size);
 
 	vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
 	commandBufferAllocateInfo
@@ -324,4 +327,8 @@ vk::DescriptorSet VulkanCraft::Graphics::ResourceManager::getModelDescriptorSet(
 
 void VulkanCraft::Graphics::ResourceManager::flushUBOBuffer() {
 	vmaFlushAllocation(this->vma, this->modelUboAllocation, 0, VK_WHOLE_SIZE);
-}	
+}
+VmaAllocator VulkanCraft::Graphics::ResourceManager::getAllocator() {
+	return this->vma;
+}
+

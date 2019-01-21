@@ -17,16 +17,25 @@ VulkanCraft::Graphics::Mesh::Mesh(const tinyobj::attrib_t & attributes, const ti
 			attributes.vertices[index.vertex_index * 3 + 2]
 		};
 
-		vertex.normal = {
-			attributes.normals[index.normal_index * 3 + 0],
-			attributes.normals[index.normal_index * 3 + 1],
-			attributes.normals[index.normal_index * 3 + 2]
-		};
-
-		vertex.uv = {
-			attributes.texcoords[index.texcoord_index * 2 + 0],
-			attributes.texcoords[index.texcoord_index * 2 + 1]
-		};
+		if (attributes.normals.size() > 0) {
+			vertex.normal = {
+				attributes.normals[index.normal_index * 3 + 0],
+				attributes.normals[index.normal_index * 3 + 1],
+				attributes.normals[index.normal_index * 3 + 2]
+			};
+		} else {
+			vertex.normal = { 0.0f, 0.0f, 0.0f };
+		}
+		
+		if (attributes.texcoords.size() > 0) {
+			vertex.uv = {
+				attributes.texcoords[index.texcoord_index * 2 + 0],
+				attributes.texcoords[index.texcoord_index * 2 + 1]
+			};
+		} else {
+			vertex.uv = { 0.0f, 0.0f };
+		}
+		
 
 		vertex.color = {1.0, 1.0f, 1.0f};
 

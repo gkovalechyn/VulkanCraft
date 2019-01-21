@@ -37,6 +37,12 @@ namespace VulkanCraft {
 			vk::Extent2D surfaceExtent;
 		};
 
+		typedef VkBool32(VKAPI_PTR *PFN_vkDebugUtilsMessengerCallbackEXT)(
+			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+			VkDebugUtilsMessageTypeFlagsEXT messageType,
+			const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+			void* pUserData);
+
 		class RenderingEngine {
 		public:
 			RenderingEngine();
@@ -59,7 +65,7 @@ namespace VulkanCraft {
 			std::shared_ptr<GraphicsPipeline> getDefaultPipeline() noexcept;
 		private:
 			vk::Instance vkInstance;
-			VkDebugReportCallbackEXT debugCallbackHandle;
+			VkDebugUtilsMessengerEXT debugMessenger;
 			GraphicalDevice* device;
 			WindowData window;
 

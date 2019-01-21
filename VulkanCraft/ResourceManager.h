@@ -35,7 +35,7 @@ namespace VulkanCraft {
 			VmaAllocation allocateIndexBuffer(uint64_t sizeInBytes, VkBuffer * outHandle);
 			VmaAllocation allocateStagingBuffer(uint64_t sizeInBytes, VkBuffer * outHandle);
 
-			VmaAllocation allocateBuffer(uint64_t sizeInBytes, VkBuffer * outHandle, vk::BufferUsageFlags usageFlags, VmaMemoryUsage usage);
+			VmaAllocation allocateBuffer(uint64_t sizeInBytes, VkBuffer * outHandle, vk::BufferUsageFlags usageFlags, VmaMemoryUsage usage, VmaAllocationCreateFlags allocationFlags = 0);
 
 			void queueMemoryTransfer(const vk::Buffer& from, const vk::Buffer& to, const uint64_t size, const uint64_t offsetFrom = 0, const uint64_t offsetTo = 0);
 			void queueFrameImportantMemoryTransfer(const vk::Buffer& from, const vk::Buffer& to, const uint64_t size, const uint64_t offsetFrom = 0, const uint64_t offsetTo = 0);
@@ -60,6 +60,8 @@ namespace VulkanCraft {
 			uint64_t getModelUboRequiredAlignment();
 			vk::DescriptorSet getModelDescriptorSet();
 			void flushUBOBuffer();
+
+			VmaAllocator getAllocator();
 		private:
 			const GraphicalDevice* device;
 			vk::CommandPool commandPool;

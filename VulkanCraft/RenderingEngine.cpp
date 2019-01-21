@@ -3,20 +3,16 @@
 using namespace VulkanCraft;
 using namespace VulkanCraft::Graphics;
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-	VkDebugReportFlagsEXT flags,
-	VkDebugReportObjectTypeEXT objType,
-	uint64_t obj,
-	size_t location,
-	int32_t code,
-	const char* layerPrefix,
-	const char* msg,
-	void* userData) {
+static VkBool32 debugUtilCallback(
+	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT messageType,
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	void* pUserData) {
+	Core::Logger::debug("Received debug util message");
 	std::stringstream stringStream;
-	stringStream << "[VK]" << layerPrefix << ": " << msg;
+	stringStream << "[VK Util]" << pCallbackData->pMessageIdName << ": " << pCallbackData->pMessage;
 
 	Core::Logger::debug(stringStream.str());
-	//Core::Logger::vaLog(Core::LogLevel::eDebug, "%s: %s", std::string(layerPrefix), msg);
 
 	return VK_FALSE;
 }
@@ -40,10 +36,8 @@ RenderingEngine::~RenderingEngine() {
 	delete this->device;
 
 #ifdef DEBUG
-	auto func = (PFN_vkDestroyDebugReportCallbackEXT)this->vkInstance.getProcAddr("vkDestroyDebugReportCallbackEXT");
-	if (func != nullptr) {
-		func((VkInstance)this->vkInstance, this->debugCallbackHandle, nullptr);
-	}
+	auto debugUtilsFunc = (PFN_vkDestroyDebugUtilsMessengerEXT) this->vkInstance.getProcAddr("vkDestroyDebugUtilsMessengerEXT");
+	debugUtilsFunc((VkInstance)this->vkInstance, this->debugMessenger, nullptr);
 #endif // DEBUG
 
 	this->vkInstance.destroy();
@@ -70,7 +64,7 @@ void RenderingEngine::initialize(GLFWwindow * window) {
 
 	this->resourceManager = std::make_unique<VulkanCraft::Graphics::ResourceManager>(*this->device, this->getDefaultPipeline()->getDescriptorSetLayout());
 
-	this->resourceManager->createModelUbo(256);
+	this->resourceManager->createModelUbo(16);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::beginFrame() {
@@ -173,8 +167,10 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 		descriptorSets.push_back(descriptorSetWithData.descriptorSet);
 	}
 	*/
+
 	auto mesh = renderable.getMesh();
 	auto renderData = renderable.getRenderData();
+	
 	
 	auto modelMatrix = renderable.getModelMatrix();
 	glm::mat4* aligned = (glm::mat4*) _aligned_malloc(sizeof(glm::mat4), this->resourceManager->getModelUboRequiredAlignment());
@@ -184,12 +180,13 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 
 	memcpy(this->modelUboMemory, aligned , sizeof(glm::mat4));
 	this->resourceManager->flushUBOBuffer();
-
+	
 	frame.commandBuffer.bindVertexBuffers(0, { mesh->getVertexBuffer().buffer }, { mesh->getVertexBuffer().offset });
 	frame.commandBuffer.bindIndexBuffer(mesh->getIndexBuffer().buffer, mesh->getIndexBuffer().offset, vk::IndexType::eUint32);
 	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, {this->resourceManager->getModelDescriptorSet()}, {static_cast<uint32_t>(renderData.uboIndex * this->resourceManager->getModelUboRequiredAlignment())});
 
-	frame.commandBuffer.drawIndexed(static_cast<uint32_t>(mesh->getIndexCount()), 1, 0, 0, 0);
+	frame.commandBuffer.drawIndexed(mesh->getIndexCount(), 1, 0, 0, 0);
+
 	_aligned_free(aligned);
 }
 
@@ -262,7 +259,7 @@ std::shared_ptr<GraphicsPipeline> VulkanCraft::Graphics::RenderingEngine::getDef
 
 void RenderingEngine::initializeVulkan() {
 	vk::ApplicationInfo applicationInfo;
-	applicationInfo.setApiVersion(VK_API_VERSION_1_0)
+	applicationInfo.setApiVersion(VK_API_VERSION_1_1)
 		.setPApplicationName("VulkanCraft")
 		.setApplicationVersion(VK_MAKE_VERSION(0, 0, 1))
 		.setPEngineName("No engine")
@@ -298,19 +295,14 @@ void RenderingEngine::initializeVulkan() {
 	this->vkInstance = vk::createInstance(createInfo, nullptr);
 
 #ifdef DEBUG
-	VkDebugReportCallbackCreateInfoEXT  debugCreateInfo;
-	debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-	debugCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
-	debugCreateInfo.pfnCallback = &debugCallback;
+	VkDebugUtilsMessengerCreateInfoEXT debugInfoCreateInfo;
+	debugInfoCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	debugInfoCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
+	debugInfoCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	debugInfoCreateInfo.pfnUserCallback = &debugUtilCallback;
 
-	PFN_vkCreateDebugReportCallbackEXT createDebugReportCallbackFunction = (PFN_vkCreateDebugReportCallbackEXT)this->vkInstance.getProcAddr("vkCreateDebugReportCallbackEXT");
-	createDebugReportCallbackFunction(
-		(VkInstance)this->vkInstance,
-		&debugCreateInfo,
-		nullptr,
-		&debugCallbackHandle
-	);
-
+	auto createDebugUtilsFunc = (PFN_vkCreateDebugUtilsMessengerEXT)this->vkInstance.getProcAddr("vkCreateDebugUtilsMessengerEXT");
+	createDebugUtilsFunc((VkInstance)this->vkInstance, &debugInfoCreateInfo, nullptr, &this->debugMessenger);
 	Core::Logger::debug("Created debug report callback");
 #endif
 }
