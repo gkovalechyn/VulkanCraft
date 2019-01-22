@@ -17,8 +17,8 @@ ForwardPipeline::~ForwardPipeline() {
 	this->device.destroyPipeline(this->handle);
 	this->device.destroyPipelineLayout(this->layout);
 	this->device.destroyDescriptorSetLayout(this->descriptorSetLayout);
+	this->device.destroyRenderPass(this->renderPass);
 
-	
 	this->device.destroyShaderModule(this->shaderModules.vertex);
 	this->device.destroyShaderModule(this->shaderModules.fragment);	
 

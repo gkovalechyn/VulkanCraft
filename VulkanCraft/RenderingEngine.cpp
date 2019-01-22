@@ -23,6 +23,9 @@ RenderingEngine::RenderingEngine() {
 
 RenderingEngine::~RenderingEngine() {
 	Core::Logger::debug("Destroying rendering engine");
+	this->device->logicalDevice.waitIdle();
+
+	this->resourceManager.reset();
 	this->destroyPerFrameData();
 
 	this->device->logicalDevice.destroyCommandPool(this->commandPool);
@@ -248,7 +251,7 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame(const std::vector<PendingM
 	auto nowFPS = 1000 / timePassed;
 
 	this->frameTime = timePassed;
-	this->fps = (this->fps * 0.99) + (nowFPS * 0.01);
+	this->fps = (float)  (this->fps * 0.99) + (nowFPS * 0.01);
 	this->lastFrameTimestamp = currentTime;
 }
 
@@ -260,8 +263,8 @@ ResourceManager * VulkanCraft::Graphics::RenderingEngine::getResourceManager() {
 	return this->resourceManager.get();
 }
 
-std::shared_ptr<GraphicsPipeline> VulkanCraft::Graphics::RenderingEngine::getDefaultPipeline() noexcept {
-	return this->pipeline;
+GraphicsPipeline* VulkanCraft::Graphics::RenderingEngine::getDefaultPipeline() noexcept {
+	return &(*this->pipeline);
 }
 
 float VulkanCraft::Graphics::RenderingEngine::getFPS() {
@@ -453,5 +456,7 @@ void VulkanCraft::Graphics::RenderingEngine::destroyPerFrameData() {
 
 		this->device->logicalDevice.destroyFramebuffer(data.framebuffer);
 		this->device->logicalDevice.freeCommandBuffers(this->commandPool, data.commandBuffer);
+
+		this->device->logicalDevice.destroyDescriptorPool(data.descriptorPool);
 	}
 }

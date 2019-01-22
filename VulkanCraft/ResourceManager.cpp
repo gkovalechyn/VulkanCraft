@@ -41,7 +41,45 @@ VulkanCraft::Graphics::ResourceManager::ResourceManager(const GraphicalDevice& d
 }
 
 VulkanCraft::Graphics::ResourceManager::~ResourceManager() {
+	Core::Logger::debug("Freeing ResourceManager resources");
+
+	for (auto& transfer : this->pendingImportantTransfers) {
+		this->freeTransferResources(transfer);
+	}
+
+	for (auto& transfer : this->pendingTransfers) {
+		this->freeTransferResources(transfer);
+	}
+
+	this->device->logicalDevice.destroyCommandPool(this->commandPool);
+
+	this->device->logicalDevice.freeDescriptorSets(this->modelDescriptorPool, { this->modelDescriptorSet });
+	this->device->logicalDevice.destroyDescriptorPool(this->modelDescriptorPool);
+	
+	//Vertex
+	this->device->logicalDevice.destroyBuffer(this->vertexBufferManager->getManagedBuffer());
+	vmaFreeMemory(this->vma, this->vertexBufferManager->getBufferAllocation());
+
+	//Index
+	this->device->logicalDevice.destroyBuffer(this->indexBufferManager->getManagedBuffer());
+	vmaFreeMemory(this->vma, this->indexBufferManager->getBufferAllocation());
+
+	//UBO
+	this->device->logicalDevice.destroyBuffer(this->uboBufferManager->getManagedBuffer());
+	vmaFreeMemory(this->vma, this->uboBufferManager->getBufferAllocation());
+
+	//Staging
+	vmaUnmapMemory(this->vma, this->stagingBufferManager->getBufferAllocation());
+	vmaFreeMemory(this->vma, this->stagingBufferManager->getBufferAllocation());
+	this->device->logicalDevice.destroyBuffer(this->stagingBufferManager->getManagedBuffer());
+
+	//Model dynamic UBO
+	this->device->logicalDevice.destroyBuffer(this->modelUboBuffer);
+	vmaFreeMemory(this->vma, this->modelUboAllocation);
+
+	Core::Logger::debug("Destroying VulkanMemoryAllocator");
 	vmaDestroyAllocator(this->vma);
+	Core::Logger::debug("Done freeing ResourceManager resources");
 }
 
 VmaAllocation VulkanCraft::Graphics::ResourceManager::allocateVertexBuffer(uint64_t sizeInBytes, VkBuffer* outHandle) {
@@ -206,9 +244,7 @@ void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
 				pendingTransfer.toOffset
 			);
 
-			this->device->logicalDevice.destroyFence(pendingTransfer.doneFence);
-			this->device->logicalDevice.destroySemaphore(pendingTransfer.doneSemaphore);
-			this->device->logicalDevice.freeCommandBuffers(this->commandPool, { pendingTransfer.commandBuffer });
+			this->freeTransferResources(pendingTransfer);
 
 			//this->pendingImportantTransfers.erase(std::next(it).base());
 		} else {
@@ -236,10 +272,7 @@ void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
 				pendingTransfer.toOffset
 			);
 
-			//TODO Free allocated resources
-
-			//std::advance(it, 1);
-			//this->pendingTransfers.erase(std::next(it).base());
+			this->freeTransferResources(pendingTransfer);
 		} else {
 			newPendingList.push_back(std::move(pendingTransfer));
 		}
@@ -330,5 +363,11 @@ void VulkanCraft::Graphics::ResourceManager::flushUBOBuffer() {
 }
 VmaAllocator VulkanCraft::Graphics::ResourceManager::getAllocator() {
 	return this->vma;
+}
+
+void VulkanCraft::Graphics::ResourceManager::freeTransferResources(PendingMemoryTransfer & transfer) {
+	this->device->logicalDevice.destroyFence(transfer.doneFence);
+	this->device->logicalDevice.destroySemaphore(transfer.doneSemaphore);
+	this->device->logicalDevice.freeCommandBuffers(this->commandPool, { transfer.commandBuffer });
 }
 

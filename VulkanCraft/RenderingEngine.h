@@ -56,7 +56,7 @@ namespace VulkanCraft {
 			ResourceManager* getResourceManager();
 
 			void registerPipeline(std::string name, GraphicsPipeline* pipeline);
-			std::shared_ptr<GraphicsPipeline> getDefaultPipeline() noexcept;
+			GraphicsPipeline* getDefaultPipeline() noexcept;
 
 			float getFPS();
 			float getFrameTime();
@@ -83,7 +83,7 @@ namespace VulkanCraft {
 
 #ifdef DEBUG
 			std::vector<const char*> requiredLayers = { "VK_LAYER_LUNARG_standard_validation"};
-			std::vector<const char*> requiredExtensions = { "VK_EXT_debug_report" };
+			std::vector<const char*> requiredExtensions = {};
 #else
 			std::vector<const char*> requiredLayers = {};
 			std::vector<const char*> requiredExtensions = {};

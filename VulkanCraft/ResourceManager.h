@@ -85,6 +85,8 @@ namespace VulkanCraft {
 			void* mappedStagingBuffer;
 
 			VmaAllocator vma;
+
+			void freeTransferResources(PendingMemoryTransfer& transfer);
 		};
 	}
 }

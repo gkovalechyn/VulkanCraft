@@ -50,8 +50,6 @@ namespace VulkanCraft {
 			vk::RenderPass renderPass;
 
 			vk::Pipeline handle;
-			std::vector<vk::Framebuffer> framebuffers;
-			vk::DescriptorPool descriptorPool;
 
 			void createShaderModules();
 			void createLayout();

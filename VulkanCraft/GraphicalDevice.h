@@ -31,7 +31,6 @@ namespace VulkanCraft {
 				std::vector<const char*>& validationLayers,
 				std::vector<const char*>& requiredExtensions,
 				vk::SurfaceKHR surface);
-			void destroy();
 		private:
 			
 

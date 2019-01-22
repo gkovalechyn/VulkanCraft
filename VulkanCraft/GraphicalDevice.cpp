@@ -97,16 +97,12 @@ GraphicalDevice* GraphicalDevice::getGraphicalDevice(
 	return device;
 }
 
-void VulkanCraft::Graphics::GraphicalDevice::destroy() {
-	this->logicalDevice.destroy();
-}
-
 GraphicalDevice::GraphicalDevice() {
 }
 
 
 GraphicalDevice::~GraphicalDevice() {
-
+	this->logicalDevice.destroy();
 }
 
 bool VulkanCraft::Graphics::GraphicalDevice::isDeviceSuitable(vk::PhysicalDevice device, std::vector<const char*>& requiredExtensions, vk::SurfaceKHR surface) {

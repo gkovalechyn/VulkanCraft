@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 
 	GLFWwindow* window;
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	window = glfwCreateWindow(800, 600, "Test", nullptr, nullptr);
+	window = glfwCreateWindow(1280, 720, "Test", nullptr, nullptr);
 
 	auto renderingEngine = std::make_unique<VulkanCraft::Graphics::RenderingEngine>();
 	renderingEngine->initialize(window);
