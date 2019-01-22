@@ -143,6 +143,7 @@
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GraphicalDevice.cpp" />
     <ClCompile Include="GraphicsPipeline.cpp" />
+    <ClCompile Include="libs\tinyObjLoader.cpp" />
     <ClCompile Include="libs\vk_mem_alloc.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -155,7 +156,6 @@
     <ClCompile Include="ShaderFactory.cpp" />
     <ClCompile Include="Swapchain.cpp" />
     <ClCompile Include="TestRenderable.cpp" />
-    <ClCompile Include="tinyObjLoader.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="VCraft.cpp" />
     <ClCompile Include="WireframePipeline.cpp" />
