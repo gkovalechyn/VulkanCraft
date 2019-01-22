@@ -3,12 +3,12 @@
 using namespace VulkanCraft;
 using namespace VulkanCraft::Graphics;
 
-std::unique_ptr<GraphicalDevice> GraphicalDevice::getGraphicalDevice(
+GraphicalDevice* GraphicalDevice::getGraphicalDevice(
 	vk::Instance& instance,
 	std::vector<const char*>& validationLayers, 
 	std::vector<const char*>& requiredExtensions,
 	vk::SurfaceKHR surface) {
-	auto device = std::make_unique<GraphicalDevice>();
+	auto device = new GraphicalDevice();
 
 	std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
 
@@ -18,6 +18,8 @@ std::unique_ptr<GraphicalDevice> GraphicalDevice::getGraphicalDevice(
 			break;
 		}
 	}
+
+	device->properties = device->physicalDevice.getProperties();
 
 	std::vector<vk::QueueFamilyProperties> queueFamilyProperties = device->physicalDevice.getQueueFamilyProperties();
 	uint32_t queueFamilyIndex = 0;
@@ -95,16 +97,12 @@ std::unique_ptr<GraphicalDevice> GraphicalDevice::getGraphicalDevice(
 	return device;
 }
 
-void VulkanCraft::Graphics::GraphicalDevice::destroy() {
-	this->logicalDevice.destroy();
-}
-
 GraphicalDevice::GraphicalDevice() {
 }
 
 
 GraphicalDevice::~GraphicalDevice() {
-
+	this->logicalDevice.destroy();
 }
 
 bool VulkanCraft::Graphics::GraphicalDevice::isDeviceSuitable(vk::PhysicalDevice device, std::vector<const char*>& requiredExtensions, vk::SurfaceKHR surface) {

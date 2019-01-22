@@ -81,6 +81,10 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <ShowProgress>LinkVerboseLib</ShowProgress>
@@ -92,6 +96,10 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <ShowProgress>LinkVerboseLib</ShowProgress>
@@ -126,39 +134,66 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BufferMemoryManager.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Component.cpp" />
     <ClCompile Include="Configuration.cpp" />
     <ClCompile Include="Constants.cpp" />
     <ClCompile Include="ForwardPipeline.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GraphicalDevice.cpp" />
     <ClCompile Include="GraphicsPipeline.cpp" />
+    <ClCompile Include="libs\vk_mem_alloc.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Renderable.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderFactory.cpp" />
     <ClCompile Include="Swapchain.cpp" />
+    <ClCompile Include="TestRenderable.cpp" />
+    <ClCompile Include="tinyObjLoader.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="VCraft.cpp" />
+    <ClCompile Include="WireframePipeline.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BufferMemoryManager.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Component.h" />
     <ClInclude Include="Configuration.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="FileUtils.h" />
     <ClInclude Include="ForwardPipeline.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="GlobalDefines.h" />
+    <ClInclude Include="GPUAllocation.h" />
     <ClInclude Include="GraphicalDevice.h" />
     <ClInclude Include="GraphicsDefs.h" />
     <ClInclude Include="GraphicsPipeline.h" />
-    <ClInclude Include="json.hpp" />
+    <ClInclude Include="libs\json.hpp" />
+    <ClInclude Include="libs\tiny_obj_loader.h" />
+    <ClInclude Include="libs\vk_mem_alloc.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Renderable.h" />
+    <ClInclude Include="RenderData.h" />
     <ClInclude Include="RenderingEngine.h" />
+    <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ConfigurationError.h" />
     <ClInclude Include="ShaderFactory.h" />
     <ClInclude Include="Swapchain.h" />
+    <ClInclude Include="TestRenderable.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="VCraft.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="WindowData.h" />
+    <ClInclude Include="WireframePipeline.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Pipelines\Example.json" />

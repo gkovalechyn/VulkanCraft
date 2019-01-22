@@ -12,6 +12,8 @@ namespace VulkanCraft {
 
 			vk::PhysicalDevice physicalDevice;
 			vk::Device logicalDevice;
+			vk::PhysicalDeviceProperties properties;
+
 			uint32_t graphicsFamilyIndex = -1;
 			uint32_t transferFamilyIndex = -1;
 			uint32_t computeFamilyIndex = -1;
@@ -25,11 +27,10 @@ namespace VulkanCraft {
 			/**
 				Finds a graphical device that has the given validation layers, extensions required and that can also present to the given surface.
 			*/
-			static std::unique_ptr<GraphicalDevice> getGraphicalDevice(vk::Instance& instance,
+			static GraphicalDevice* getGraphicalDevice(vk::Instance& instance,
 				std::vector<const char*>& validationLayers,
 				std::vector<const char*>& requiredExtensions,
 				vk::SurfaceKHR surface);
-			void destroy();
 		private:
 			
 

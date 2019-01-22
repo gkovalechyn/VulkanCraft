@@ -41,7 +41,7 @@ Swapchain::Swapchain(const GraphicalDevice& gd, const vk::SurfaceKHR& surface, c
 	std::vector<vk::Image> swapchainImages = gd.logicalDevice.getSwapchainImagesKHR(this->handle);
 	this->imageViews.resize(swapchainImages.size());
 
-	for (int i = 0; i < swapchainImages.size(); i++) {
+	for (size_t i = 0; i < swapchainImages.size(); i++) {
 		vk::ImageViewCreateInfo ivCreateInfo;
 
 		ivCreateInfo.setImage(swapchainImages[i])
