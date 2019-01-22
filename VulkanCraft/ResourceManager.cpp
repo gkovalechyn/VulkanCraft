@@ -20,22 +20,22 @@ VulkanCraft::Graphics::ResourceManager::ResourceManager(const GraphicalDevice& d
 	auto vertexAllocation = this->allocateVertexBuffer(4 * 1024 * 1024, &vertexBufferHandle);
 	VmaAllocationInfo info;
 	vmaGetAllocationInfo(this->vma, vertexAllocation, &info);
-	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(vertexBufferHandle), vertexAllocation, info);
+	this->vertexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(vertexBufferHandle), vertexAllocation, info, 64);
 
 	VkBuffer indexBufferHandle;
 	auto indexAllocation = this->allocateIndexBuffer(4 * 1024 * 1024, &indexBufferHandle);
 	vmaGetAllocationInfo(this->vma, indexAllocation, &info);
-	this->indexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(indexBufferHandle), indexAllocation, info);
+	this->indexBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(indexBufferHandle), indexAllocation, info, 64);
 
 	VkBuffer uboBufferHandle;
 	auto uboAllocation = this->allocateBuffer(4 * 1024 * 1024, &uboBufferHandle, vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY);
 	vmaGetAllocationInfo(this->vma, uboAllocation, &info);
-	this->uboBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(uboBufferHandle), uboAllocation, info);
+	this->uboBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(uboBufferHandle), uboAllocation, info, static_cast<uint32_t>(this->device->properties.limits.minUniformBufferOffsetAlignment));
 
 	VkBuffer stagingBufferHandle;
 	auto stagingAllocation = this->allocateStagingBuffer(16 * 1024 * 1024, &stagingBufferHandle);
 	vmaGetAllocationInfo(this->vma, stagingAllocation, &info);
-	this->stagingBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(stagingBufferHandle), stagingAllocation, info);
+	this->stagingBufferManager = std::make_unique<BufferMemoryManager>(vk::Buffer(stagingBufferHandle), stagingAllocation, info, this->device->properties.limits.minUniformBufferOffsetAlignment);
 
 	this->mapAllocation(this->stagingBufferManager->getBufferAllocation(), &this->mappedStagingBuffer);
 }
@@ -74,8 +74,8 @@ VulkanCraft::Graphics::ResourceManager::~ResourceManager() {
 	this->device->logicalDevice.destroyBuffer(this->stagingBufferManager->getManagedBuffer());
 
 	//Model dynamic UBO
-	this->device->logicalDevice.destroyBuffer(this->modelUboBuffer);
-	vmaFreeMemory(this->vma, this->modelUboAllocation);
+	this->device->logicalDevice.destroyBuffer(this->modelUboBufferManager->getManagedBuffer());
+	vmaFreeMemory(this->vma, this->modelUboBufferManager->getBufferAllocation());
 
 	Core::Logger::debug("Destroying VulkanMemoryAllocator");
 	vmaDestroyAllocator(this->vma);
@@ -282,25 +282,22 @@ void VulkanCraft::Graphics::ResourceManager::updateTransfers() noexcept {
 }
 
 void VulkanCraft::Graphics::ResourceManager::createModelUbo(const uint32_t maxModelCount) {
+	Core::Logger::vaLog(Core::LogLevel::eDebug, "Min UBO alignment: %d", this->device->properties.limits.minUniformBufferOffsetAlignment);
+	uint64_t minBlockSize = this->device->properties.limits.minUniformBufferOffsetAlignment;
 	VkBuffer handle;
 
-	//https://github.com/SaschaWillems/Vulkan/tree/master/examples/dynamicuniformbuffer
-	auto minUboAlignment = this->device->properties.limits.minUniformBufferOffsetAlignment;
-	auto dynamicAlignment = sizeof(glm::mat4);
-	if (minUboAlignment > 0) {
-		dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
-	}
-
-	this->modelUboAlignment = dynamicAlignment;
-
-	this->modelUboAllocation = this->allocateBuffer(
-		maxModelCount * dynamicAlignment,
+	auto modelUboAllocation = this->allocateBuffer(
+		maxModelCount * minBlockSize,
 		&handle,
 		vk::BufferUsageFlagBits::eUniformBuffer,
 		VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU
 	);
 
-	this->modelUboBuffer = vk::Buffer(handle);
+	VmaAllocationInfo info;
+	vmaGetAllocationInfo(this->vma, modelUboAllocation, &info);
+	auto modelUboBuffer = vk::Buffer(handle);
+
+	this->modelUboBufferManager = std::make_unique<BufferMemoryManager>(modelUboBuffer, modelUboAllocation, info, this->device->properties.limits.minUniformBufferOffsetAlignment);
 
 	vk::DescriptorPoolSize poolSize = {};
 	poolSize
@@ -327,7 +324,7 @@ void VulkanCraft::Graphics::ResourceManager::createModelUbo(const uint32_t maxMo
 
 	vk::DescriptorBufferInfo bufferInfo = {};
 	bufferInfo
-		.setBuffer(this->modelUboBuffer)
+		.setBuffer(modelUboBuffer)
 		.setOffset(0)
 		.setRange(VK_WHOLE_SIZE);
 
@@ -343,15 +340,23 @@ void VulkanCraft::Graphics::ResourceManager::createModelUbo(const uint32_t maxMo
 }
 
 void VulkanCraft::Graphics::ResourceManager::mapModelDynamicUbo(void ** ptr) {
-	vmaMapMemory(this->vma, this->modelUboAllocation, ptr);
+	vmaMapMemory(this->vma, this->modelUboBufferManager->getBufferAllocation(), ptr);
 }
 
 void VulkanCraft::Graphics::ResourceManager::unmapModelDynamicUbo() {
-	vmaUnmapMemory(this->vma, this->modelUboAllocation);
+	vmaUnmapMemory(this->vma, this->modelUboBufferManager->getBufferAllocation());
 }
 
 uint64_t VulkanCraft::Graphics::ResourceManager::getModelUboRequiredAlignment() {
-	return this->modelUboAlignment;
+	return this->device->properties.limits.minUniformBufferOffsetAlignment;
+}
+
+GPUAllocation VulkanCraft::Graphics::ResourceManager::allocateModelData(uint64_t size) {
+	return this->modelUboBufferManager->allocateMemory(size);
+}
+
+void VulkanCraft::Graphics::ResourceManager::freeModelAllocation(const GPUAllocation & allocation) {
+	this->modelUboBufferManager->freeAllocation(allocation);
 }
 
 vk::DescriptorSet VulkanCraft::Graphics::ResourceManager::getModelDescriptorSet() {
@@ -359,7 +364,7 @@ vk::DescriptorSet VulkanCraft::Graphics::ResourceManager::getModelDescriptorSet(
 }
 
 void VulkanCraft::Graphics::ResourceManager::flushUBOBuffer() {
-	vmaFlushAllocation(this->vma, this->modelUboAllocation, 0, VK_WHOLE_SIZE);
+	vmaFlushAllocation(this->vma, this->modelUboBufferManager->getBufferAllocation(), 0, VK_WHOLE_SIZE);
 }
 VmaAllocator VulkanCraft::Graphics::ResourceManager::getAllocator() {
 	return this->vma;

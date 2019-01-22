@@ -7,7 +7,7 @@ namespace VulkanCraft {
 	namespace Graphics {
 		class BufferMemoryManager {
 		public:
-			BufferMemoryManager(vk::Buffer buffer, VmaAllocation allocation, VmaAllocationInfo info);
+			BufferMemoryManager(vk::Buffer buffer, VmaAllocation allocation, VmaAllocationInfo info, uint32_t blockSize);
 			~BufferMemoryManager();
 
 			GPUAllocation allocateMemory(const uint64_t size);
@@ -34,7 +34,8 @@ namespace VulkanCraft {
 
 			const vk::Buffer buffer;
 			const VmaAllocation allocation;
-			
+			const uint32_t blockSize;
+
 			uint64_t nextAllocationID = 1;
 			std::vector<MemoryBlock> usedBlocks;
 			std::vector<MemoryBlock> freeBlocks;

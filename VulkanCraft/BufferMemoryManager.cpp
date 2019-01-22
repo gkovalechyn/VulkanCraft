@@ -2,7 +2,7 @@
 
 using namespace VulkanCraft::Graphics;
 
-VulkanCraft::Graphics::BufferMemoryManager::BufferMemoryManager(vk::Buffer buffer, VmaAllocation allocation, VmaAllocationInfo info) : buffer{ buffer }, allocation { allocation } {
+VulkanCraft::Graphics::BufferMemoryManager::BufferMemoryManager(vk::Buffer buffer, VmaAllocation allocation, VmaAllocationInfo info, uint32_t blockSize) : buffer{ buffer }, allocation{ allocation }, blockSize{ blockSize } {
 	auto initialFreeBlock = MemoryBlock(0, static_cast<uint64_t>(0), info.size);
 
 	this->freeBlocks.push_back(initialFreeBlock);
@@ -12,11 +12,20 @@ VulkanCraft::Graphics::BufferMemoryManager::~BufferMemoryManager() {
 }
 
 GPUAllocation VulkanCraft::Graphics::BufferMemoryManager::allocateMemory(const uint64_t size) {
+	uint64_t realSize;
+
+	if (this->blockSize > 0) {
+		int numBlocks = static_cast<int>(std::ceil(size / (float)this->blockSize));
+		realSize = numBlocks * this->blockSize;
+	} else {
+		realSize = size;
+	}
+
 	for (auto it = this->freeBlocks.begin(); it != this->freeBlocks.end(); it++) {
 		auto freeBlock = *it;
 
-		if (freeBlock.size >= size) {
-			auto remainingBlock = MemoryBlock(freeBlock.base + size, freeBlock.size - size);
+		if (freeBlock.size >= realSize) {
+			auto remainingBlock = MemoryBlock(freeBlock.base + realSize, freeBlock.size - realSize);
 			
 			if (remainingBlock.size > 0) {
 				//To prevent moving all the remaining elements twice, once for the deletion and another one for the insertion
@@ -28,7 +37,7 @@ GPUAllocation VulkanCraft::Graphics::BufferMemoryManager::allocateMemory(const u
 			auto allocation = GPUAllocation(
 				this->nextAllocationID++,
 				this->buffer,
-				size,
+				realSize,
 				freeBlock.base
 			);
 

@@ -13,7 +13,7 @@ namespace VulkanCraft {
 
 		struct RenderData {
 			ModelUBOData modelUboData;
-			uint32_t uboIndex;
+			GPUAllocation modelAllocation;
 
 			glm::mat4 calculateModelMatrix() {
 				auto scale = glm::scale(glm::mat4(1), this->modelUboData.scale);

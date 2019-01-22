@@ -55,9 +55,12 @@ namespace VulkanCraft {
 			void createModelUbo(const uint32_t maxModelCount);
 
 			void mapModelDynamicUbo(void** ptr);
+			GPUAllocation allocateModelData(uint64_t size);
+			void freeModelAllocation(const GPUAllocation& allocation);
 			void unmapModelDynamicUbo();
 
 			uint64_t getModelUboRequiredAlignment();
+
 			vk::DescriptorSet getModelDescriptorSet();
 			void flushUBOBuffer();
 
@@ -73,14 +76,11 @@ namespace VulkanCraft {
 			std::unique_ptr<BufferMemoryManager> indexBufferManager;
 			std::unique_ptr<BufferMemoryManager> stagingBufferManager;
 			std::unique_ptr<BufferMemoryManager> uboBufferManager;
+			std::unique_ptr<BufferMemoryManager> modelUboBufferManager;
 
 			vk::DescriptorPool modelDescriptorPool;
 			vk::DescriptorSet modelDescriptorSet;
-
 			vk::DescriptorSetLayout layout;
-			VmaAllocation modelUboAllocation;
-			vk::Buffer modelUboBuffer;
-			uint64_t modelUboAlignment;
 
 			void* mappedStagingBuffer;
 

@@ -17,7 +17,7 @@ static VkBool32 debugUtilCallback(
 }
 
 RenderingEngine::RenderingEngine() {
-	
+
 }
 
 
@@ -38,7 +38,7 @@ RenderingEngine::~RenderingEngine() {
 	delete this->device;
 
 #ifdef DEBUG
-	auto debugUtilsFunc = (PFN_vkDestroyDebugUtilsMessengerEXT) this->vkInstance.getProcAddr("vkDestroyDebugUtilsMessengerEXT");
+	auto debugUtilsFunc = (PFN_vkDestroyDebugUtilsMessengerEXT)this->vkInstance.getProcAddr("vkDestroyDebugUtilsMessengerEXT");
 	debugUtilsFunc((VkInstance)this->vkInstance, this->debugMessenger, nullptr);
 #endif // DEBUG
 
@@ -170,29 +170,20 @@ void VulkanCraft::Graphics::RenderingEngine::queueForRendering(Renderable & rend
 	}
 	*/
 
-	
+
 
 	auto mesh = renderable.getMesh();
 	auto renderData = renderable.getRenderData();
+	auto modelDataPtr = ((uint8_t*)this->modelUboMemory) + renderData.modelAllocation.offset;
+	auto matrix = renderable.getModelMatrix();
 
-	
-	auto modelMatrix = renderable.getModelMatrix();
-	glm::mat4* aligned = (glm::mat4*) _aligned_malloc(sizeof(glm::mat4), this->resourceManager->getModelUboRequiredAlignment());
-	*aligned = modelMatrix;
-
-	renderData.uboIndex = 0;
-
-	memcpy(this->modelUboMemory, aligned , sizeof(glm::mat4));
-	this->resourceManager->flushUBOBuffer();
-	
+	memcpy(modelDataPtr, &matrix, sizeof(glm::mat4));
 
 	frame.commandBuffer.bindVertexBuffers(0, { mesh->getVertexBuffer().buffer }, { mesh->getVertexBuffer().offset });
 	frame.commandBuffer.bindIndexBuffer(mesh->getIndexBuffer().buffer, mesh->getIndexBuffer().offset, vk::IndexType::eUint32);
-	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, {this->resourceManager->getModelDescriptorSet()}, {static_cast<uint32_t>(renderData.uboIndex * this->resourceManager->getModelUboRequiredAlignment())});
+	frame.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->getLayout(), 0, { this->resourceManager->getModelDescriptorSet() }, { static_cast<uint32_t>(renderData.modelAllocation.offset) });
 
 	frame.commandBuffer.drawIndexed(static_cast<uint32_t>(mesh->getIndexCount()), 1, 0, 0, 0);
-
-	_aligned_free(aligned);
 }
 
 void VulkanCraft::Graphics::RenderingEngine::endPass() {
@@ -205,6 +196,8 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame(const std::vector<PendingM
 	const PerFrameData& frame = this->frames[this->currentFrame];
 
 	frame.commandBuffer.end();
+
+	this->resourceManager->flushUBOBuffer();
 
 	//One for each transfer that needs to finish and 1 more for the image available semaphore
 	std::vector<vk::PipelineStageFlags> waitStages;
@@ -251,7 +244,7 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame(const std::vector<PendingM
 	auto nowFPS = 1000 / timePassed;
 
 	this->frameTime = timePassed;
-	this->fps = (float)  (this->fps * 0.99) + (nowFPS * 0.01);
+	this->fps = (float)(this->fps * 0.99) + (nowFPS * 0.01);
 	this->lastFrameTimestamp = currentTime;
 }
 
@@ -334,7 +327,7 @@ void RenderingEngine::initializeVulkan() {
 
 void VulkanCraft::Graphics::RenderingEngine::initializeGraphicalDevice() {
 	VkSurfaceKHR surface;
-	glfwCreateWindowSurface((VkInstance) this->vkInstance, this->window.handle, nullptr, &surface);
+	glfwCreateWindowSurface((VkInstance)this->vkInstance, this->window.handle, nullptr, &surface);
 	this->window.surface = vk::SurfaceKHR(surface);
 
 	std::vector<const char*> requiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
