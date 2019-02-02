@@ -27,6 +27,7 @@ namespace VulkanCraft {
 			virtual vk::Rect2D getRenderArea() override;
 			virtual vk::PipelineLayout getLayout() override;
 			virtual vk::DescriptorSetLayout getDescriptorSetLayout() override;
+			virtual void onWindowResized(vk::Extent2D newWindowSize) override;
 
 			virtual void recreate() override;
 			virtual void cleanup() override;
@@ -58,6 +59,9 @@ namespace VulkanCraft {
 			void createPerFrameData();
 
 			
+
+			
+
 		};
 	};
 };

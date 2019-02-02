@@ -83,7 +83,6 @@ namespace VulkanCraft {
 
 #ifdef DEBUG
 			std::vector<const char*> requiredLayers = { "VK_LAYER_LUNARG_standard_validation"};
-			//std::vector<const char*> requiredLayers = { };
 			std::vector<const char*> requiredExtensions = {};
 #else
 			std::vector<const char*> requiredLayers = {};
@@ -96,6 +95,8 @@ namespace VulkanCraft {
 			void createPerFrameData();
 
 			void destroyPerFrameData();
+
+			void recreateSwapchain();
 		};
 	}
 }

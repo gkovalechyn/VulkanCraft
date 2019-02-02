@@ -55,6 +55,18 @@ vk::Pipeline ForwardPipeline::getHandle() {
 }
 
 void ForwardPipeline::recreate() {
+	Core::Logger::debug("Recreating forward pipeline");
+
+	this->device.destroyPipeline(this->handle);
+	this->device.destroyPipelineLayout(this->layout);
+	this->device.destroyDescriptorSetLayout(this->descriptorSetLayout);
+	this->device.destroyRenderPass(this->renderPass);
+
+	this->createLayout();
+	this->createRenderPass();
+	this->createPipeline();
+
+	Core::Logger::debug("Done recreating forward pipeline");
 }
 
 void ForwardPipeline::cleanup() {
@@ -293,6 +305,10 @@ void VulkanCraft::Graphics::ForwardPipeline::createPipeline() {
 }
 
 void VulkanCraft::Graphics::ForwardPipeline::createPerFrameData() {
+}
+
+void VulkanCraft::Graphics::ForwardPipeline::onWindowResized(vk::Extent2D newWindowSize) {
+	this->windowData.surfaceExtent = newWindowSize;
 }
 
 vk::DescriptorSetLayout VulkanCraft::Graphics::ForwardPipeline::getDescriptorSetLayout() {

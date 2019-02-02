@@ -28,6 +28,8 @@ namespace VulkanCraft {
 			virtual vk::DescriptorSetLayout getDescriptorSetLayout() = 0;
 
 			virtual void recreate() = 0;
+			virtual void onWindowResized(vk::Extent2D newWindowSize) = 0;
+
 			virtual void cleanup() = 0;
 		};
 	}

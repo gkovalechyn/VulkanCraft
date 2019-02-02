@@ -203,7 +203,14 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame(const std::vector<PendingM
 	std::vector<vk::PipelineStageFlags> waitStages;
 	std::vector<vk::Semaphore> waitSemaphores;
 
-	uint32_t imageIndex = this->device->logicalDevice.acquireNextImageKHR(this->swapchain->handle, std::numeric_limits<uint64_t>::max(), frame.imageAvailableSemaphore, nullptr).value;
+	auto imageIndexResult = this->device->logicalDevice.acquireNextImageKHR(this->swapchain->handle, std::numeric_limits<uint64_t>::max(), frame.imageAvailableSemaphore, nullptr);
+
+	if (imageIndexResult.result == vk::Result::eErrorOutOfDateKHR || imageIndexResult.result == vk::Result::eSuboptimalKHR) {
+		Core::Logger::warning("Surface format out of date or suboptimal, recreating swapchain");
+		this->recreateSwapchain();
+		this->resourceManager->unmapModelDynamicUbo();
+		return;
+	}
 
 	for (const auto& pendingTransfer : pendingTransfers) {
 		waitSemaphores.push_back(pendingTransfer.doneSemaphore);
@@ -233,9 +240,13 @@ void VulkanCraft::Graphics::RenderingEngine::endFrame(const std::vector<PendingM
 		.setPWaitSemaphores(&frame.renderingDoneSemaphore)
 		.setSwapchainCount(1)
 		.setPSwapchains(&this->swapchain->handle)
-		.setPImageIndices(&imageIndex);
-
-	this->device->graphicsQueue.presentKHR(presentInfo);
+		.setPImageIndices(&imageIndexResult.value);
+	try {
+		this->device->graphicsQueue.presentKHR(presentInfo);
+	}catch(const vk::OutOfDateKHRError& e){
+		Core::Logger::warning("Needed to recreate surface for rendering");
+		this->recreateSwapchain();
+	}
 
 	this->resourceManager->unmapModelDynamicUbo();
 
@@ -451,5 +462,38 @@ void VulkanCraft::Graphics::RenderingEngine::destroyPerFrameData() {
 		this->device->logicalDevice.freeCommandBuffers(this->commandPool, data.commandBuffer);
 
 		this->device->logicalDevice.destroyDescriptorPool(data.descriptorPool);
+	}
+}
+
+void VulkanCraft::Graphics::RenderingEngine::recreateSwapchain() {
+	this->device->logicalDevice.waitIdle();
+
+	int newWidth;
+	int newHeight;
+	glfwGetFramebufferSize(this->window.handle, &newWidth, &newHeight);
+	this->window.surfaceExtent = vk::Extent2D(newWidth, newHeight);
+
+	delete this->swapchain;
+	this->swapchain = new Swapchain(*this->device, this->window.surface, this->window.surfaceFormat, this->window.presentMode, this->window.surfaceExtent);
+
+	this->pipeline->onWindowResized(this->window.surfaceExtent);
+	this->pipeline->recreate();
+
+	for (int i = 0; i < this->frames.size(); i++) {
+		PerFrameData& data = this->frames[i];
+		vk::ImageView attachments[] = { this->swapchain->imageViews[i].view };
+
+
+		vk::FramebufferCreateInfo framebufferCreateInfo;
+		framebufferCreateInfo
+			.setAttachmentCount(1)
+			.setPAttachments(attachments)
+			.setHeight(this->window.surfaceExtent.height)
+			.setWidth(this->window.surfaceExtent.width)
+			.setRenderPass(this->pipeline->getRenderPass())
+			.setLayers(1);
+
+		this->device->logicalDevice.destroyFramebuffer(data.framebuffer);
+		data.framebuffer = this->device->logicalDevice.createFramebuffer(framebufferCreateInfo);
 	}
 }

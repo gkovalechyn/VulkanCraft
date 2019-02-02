@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 		testRenderable.setMesh(cubeMesh);
 		testRenderable.getRenderData().modelAllocation = modelAllocation;
 		testRenderable.setRotationSpeed(speed);
-		testRenderable.setOffset(glm::vec3(i * 3, i * 0, i * 0));
+		testRenderable.setOffset(glm::vec3(i * 3, i * 0, 10));
 
 		objects.push_back(testRenderable);
 	}
